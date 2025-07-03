@@ -1,9 +1,13 @@
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
+
 export default function Home() {
   return (
     <div className="flex flex-col">
       {/* Hero section */}
-      <section className="min-h-screen flex items-center justify-center snap-start bg-gradient-to-br from-violet-700 via-purple-600 to-sky-600">
-        <div className="container mx-auto px-6 py-12">
+      <section className="min-h-screen flex flex-col  snap-start bg-gradient-to-br from-violet-700 via-purple-600 to-sky-600">
+        <Header />
+        <div className="container flex flex-col flex-1 justify-center mx-auto px-6 py-12">
           <div className="flex flex-col items-center gap-8 text-center text-white md:gap-12">
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
               Professional Resume Builder
@@ -28,6 +32,8 @@ export default function Home() {
             </button>
           </div>
         </div>
+      <Footer />
+
       </section>
     </div>
   );
