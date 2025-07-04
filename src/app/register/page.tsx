@@ -46,7 +46,7 @@ export default function Register() {
             
             <div className="text-center py-4 px-6 bg-white/10 rounded-lg border border-white/20 max-w-md">
               <p className="text-lg font-semibold text-yellow-200">
-                Join thousands who've transformed their careers with Resumex!
+                Join thousands who&apos;ve transformed their careers with Resumex!
               </p>
             </div>
 
