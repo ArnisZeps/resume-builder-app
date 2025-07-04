@@ -25,7 +25,7 @@ export default function Home() {
               </p>
             </div>
             <Link href="/register">
-              <button className="rounded-lg bg-white px-8 py-3 font-semibold text-violet-700 shadow-lg duration-200 hover:bg-violet-50 hover:shadow-xl hover:scale-105">
+              <button className="rounded-lg bg-white px-8 py-3 font-semibold text-violet-700 shadow-lg duration-200 hover:bg-violet-50 hover:shadow-xl hover:scale-105 cursor-pointer focus:outline-none focus:ring-4 focus:ring-violet-300/50">
                 Get Started Now
               </button>
             </Link>
