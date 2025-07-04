@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -23,9 +24,11 @@ export default function Home() {
                 Only 2% of resumes win. Yours will be one of them. Let&apos;s build you a resume that works!
               </p>
             </div>
-            <button className="rounded-lg bg-white px-8 py-3 font-semibold text-violet-700 shadow-lg transition-all duration-200 hover:bg-violet-50 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-violet-300/50">
-              Get Started Today
-            </button>
+            <Link href="/register">
+              <button className="rounded-lg bg-white px-8 py-3 font-semibold text-violet-700 shadow-lg duration-200 hover:bg-violet-50 hover:shadow-xl hover:scale-105">
+                Get Started Now
+              </button>
+            </Link>
           </div>
         </div>
         <Footer />
