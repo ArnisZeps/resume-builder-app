@@ -1,11 +1,13 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import ContactForm from "./_components/ContactForm";
 import Link from "next/link";
 
 export default function Home() {
   return (
     <div className="flex flex-col">
-      <section className="min-h-screen flex flex-col  snap-start bg-gradient-to-br from-violet-700 via-purple-600 to-sky-600">
+      {/* Hero Section */}
+      <section className="min-h-screen flex flex-col bg-gradient-to-br from-violet-700 via-purple-600 to-sky-600">
         <Header />
         <div className="container flex flex-col flex-1 justify-center mx-auto px-6 py-12">
           <div className="flex flex-col items-center gap-8 text-center text-white md:gap-12">
@@ -31,8 +33,16 @@ export default function Home() {
             </Link>
           </div>
         </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="min-h-screen flex flex-col bg-white">
+        <div className="container flex flex-col flex-1 justify-center mx-auto px-6 py-12">
+          <ContactForm />
+        </div>
         <Footer />
       </section>
+
     </div>
   );
 }
