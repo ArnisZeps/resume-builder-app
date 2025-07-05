@@ -18,8 +18,8 @@ export default function Register() {
             <RegistrationForm />
           </div>
         </div>
-        <Footer />
       </section>
+      <Footer />
     </div>
   );
 }

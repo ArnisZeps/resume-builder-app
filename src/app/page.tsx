@@ -6,7 +6,6 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
       <section className="min-h-screen flex flex-col bg-gradient-to-br from-violet-700 via-purple-600 to-sky-600">
         <Header />
         <div className="container flex flex-col flex-1 justify-center mx-auto px-6 py-12">
@@ -35,7 +34,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
       <section className="min-h-screen flex flex-col bg-white">
         <div className="container flex flex-col flex-1 justify-center mx-auto px-6 py-12">
           <ContactForm />

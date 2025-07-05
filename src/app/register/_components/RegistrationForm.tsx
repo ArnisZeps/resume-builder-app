@@ -4,6 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { appwriteAuth } from '@/lib/appwrite';
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
@@ -19,6 +22,9 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegistrationForm() {
+  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const router = useRouter();
+  
   const {
     register,
     handleSubmit,
@@ -28,8 +34,28 @@ export default function RegistrationForm() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log('Registration data:', data);
+    setMessage(null);
+    
+    try {
+      const result = await appwriteAuth.createAccount(
+        data.email,
+        data.password,
+        `${data.firstName} ${data.lastName}`
+      );
+
+      if (result.success) {
+        setMessage({ type: 'success', text: 'Account created successfully! Please check your email for verification.' });
+        
+        setTimeout(() => {
+          router.push('/login');
+        }, 2000);
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Failed to create account' });
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setMessage({ type: 'error', text: 'An unexpected error occurred. Please try again.' });
+    }
   };
 
   return (
@@ -105,6 +131,16 @@ export default function RegistrationForm() {
           {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
+
+      {message && (
+        <div className={`mt-4 p-4 rounded-lg ${
+          message.type === 'success' 
+            ? 'bg-green-500/20 border border-green-400/30 text-green-100' 
+            : 'bg-red-500/20 border border-red-400/30 text-red-100'
+        }`}>
+          {message.text}
+        </div>
+      )}
 
       <div className="mt-6 text-center">
         <p className="text-white/80">
