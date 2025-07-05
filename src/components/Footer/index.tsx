@@ -13,7 +13,7 @@ const Footer = ({ variant = 'light' }: FooterProps) => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className={`text-2xl font-bold transition-colors duration-200 ${isDark ? 'text-white hover:text-yellow-200' : 'text-black hover:text-yellow-200'}`}>
-              Resumex
+              Resume Lab
             </Link>
             <p className={`mt-2 text-sm max-w-md ${isDark ? 'text-white/70' : 'text-black/70'}`}>
               Build professional resumes that get you hired. Join thousands who&apos;ve transformed their careers with our industry-leading templates.
@@ -76,7 +76,7 @@ const Footer = ({ variant = 'light' }: FooterProps) => {
         </div>
 
         <div className={`mt-8 pt-6 flex flex-col md:flex-row justify-between items-center ${isDark ? 'border-t border-white/10' : 'border-t border-black/10'}`}>
-          <p className={`text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>© 2025 Resumex. All rights reserved.</p>
+          <p className={`text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>© 2025 Resume Lab. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className={`transition-colors duration-200 text-sm ${isDark ? 'text-white/60 hover:text-white/80' : 'text-black/60 hover:text-black/80'}`}>
               Privacy

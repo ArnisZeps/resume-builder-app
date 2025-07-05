@@ -14,7 +14,7 @@ export default function Register() {
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">Create Your Account</h1>
 
               <div className="text-center py-4 px-6 bg-white/10 rounded-lg border border-white/20 max-w-md">
-                <p className="text-lg font-semibold text-yellow-200">Join thousands who&apos;ve transformed their careers with Resumex!</p>
+                <p className="text-lg font-semibold text-yellow-200">Join thousands who&apos;ve transformed their careers with Resume Lab!</p>
               </div>
 
               <RegistrationForm />

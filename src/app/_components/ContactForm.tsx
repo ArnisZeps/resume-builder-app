@@ -104,8 +104,8 @@ export default function ContactForm() {
         <div className="mt-8 text-center">
           <p className="text-gray-600 text-sm">
             Or email us directly at{' '}
-            <a href="mailto:hello@resumex.com" className="text-violet-700 hover:text-violet-600 font-semibold">
-              hello@resumex.com
+            <a href="mailto:hello@resumelab.com" className="text-violet-700 hover:text-violet-600 font-semibold">
+              hello@resumelab.com
             </a>
           </p>
         </div>

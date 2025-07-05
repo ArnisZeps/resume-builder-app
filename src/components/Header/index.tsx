@@ -48,8 +48,15 @@ const Header = () => {
           <div className="px-6 py-4">
             <div className="flex justify-between items-center">
               <div className="flex items-center">
-                <Link href="/" className="text-2xl font-bold text-white hover:text-yellow-200 transition-colors duration-200">
-                  Resumex
+                <Link href="/" className="flex items-center space-x-2 text-2xl font-bold text-white hover:text-yellow-200 transition-colors duration-200">
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 2v6l-4 8c-1 2 0 4 2 4h10c2 0 3-2 2-4l-4-8V2H9zm2 2h2v5l3.5 7c.3.6-.1 1-.5 1H7c-.4 0-.8-.4-.5-1L10 9V4z"/>
+                    <circle cx="10" cy="16" r="1"/>
+                    <circle cx="13" cy="14" r="0.8"/>
+                    <circle cx="11.5" cy="18" r="0.6"/>
+                    <circle cx="14.5" cy="17" r="0.5"/>
+                  </svg>
+                  <span>Resume Lab</span>
                 </Link>
               </div>
 

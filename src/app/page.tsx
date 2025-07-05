@@ -19,7 +19,7 @@ export default function Home() {
                   <p className="text-lg">Build best looking resume in minutes!</p>
                   <p className="text-lg">Use best industry templates</p>
                   <p className="text-lg">$2.99 monthly - no hidden costs</p>
-                  <p className="text-lg">Change your job search game with Resumex!</p>
+                  <p className="text-lg">Change your job search game with Resume Lab!</p>
                 </div>
               </div>
               <div className="text-center space-y-2 py-6 px-4 bg-white/10 rounded-lg border border-white/20">
