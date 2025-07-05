@@ -53,7 +53,7 @@ const Header = () => {
                 </Link>
               </div>
 
-              <nav className="hidden md:flex items-center space-x-8">
+              {!isLoggedIn && <nav className="hidden md:flex items-center space-x-8">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
@@ -63,7 +63,7 @@ const Header = () => {
                     {item.name}
                   </Link>
                 ))}
-              </nav>
+              </nav>}
 
               <div className="hidden md:flex items-center space-x-4">
                 {isLoggedIn && currentUser ? (

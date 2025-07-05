@@ -21,8 +21,9 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-        
-        <Footer variant="dark" />
+      </div>
+      <div className="bg-white">
+        <Footer variant="light" />
       </div>
     </AuthRedirect>
   );
