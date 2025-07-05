@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { appwriteAuth } from '@/lib/appwrite';
 
@@ -17,6 +17,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginForm() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string } | null>(null);
   const router = useRouter();
   
   const {
@@ -27,6 +29,33 @@ export default function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const sessionCheck = await appwriteAuth.checkSession();
+      if (sessionCheck.isLoggedIn && sessionCheck.user) {
+        setIsLoggedIn(true);
+        setCurrentUser({ name: sessionCheck.user.name, email: sessionCheck.user.email });
+      }
+    };
+    checkExistingSession();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const result = await appwriteAuth.logout();
+      if (result.success) {
+        setIsLoggedIn(false);
+        setCurrentUser(null);
+        setMessage({ type: 'success', text: 'Logged out successfully' });
+      } else {
+        setMessage({ type: 'error', text: result.error || 'Logout failed' });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+      setMessage({ type: 'error', text: 'An unexpected error occurred during logout' });
+    }
+  };
+
   const onSubmit = async (data: LoginFormData) => {
     setMessage(null);
     
@@ -34,11 +63,18 @@ export default function LoginForm() {
       const result = await appwriteAuth.login(data.email, data.password);
 
       if (result.success) {
-        setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
-        
-        setTimeout(() => {
-          router.push('/dashboard'); 
-        }, 1500);
+        if (result.message === 'Already logged in') {
+          setMessage({ type: 'success', text: 'You are already logged in!' });
+          setIsLoggedIn(true);
+          if (result.user) {
+            setCurrentUser({ name: result.user.name, email: result.user.email });
+          }
+        } else {
+          setMessage({ type: 'success', text: 'Login successful! Redirecting...' });
+          setTimeout(() => {
+            router.push('/dashboard'); 
+          }, 1500);
+        }
       } else {
         setMessage({ type: 'error', text: result.error || 'Login failed' });
       }
@@ -47,6 +83,45 @@ export default function LoginForm() {
       setMessage({ type: 'error', text: 'An unexpected error occurred. Please try again.' });
     }
   };
+
+  if (isLoggedIn && currentUser) {
+    return (
+      <div className="w-full max-w-md">
+        <div className="text-center space-y-6">
+          <div className="p-4 bg-green-500/20 border border-green-400/30 rounded-lg">
+            <p className="text-green-100 mb-2">You are already logged in!</p>
+            <p className="text-white/80 text-sm">Welcome back, {currentUser.name}</p>
+          </div>
+          
+          <div className="space-y-3">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="w-full rounded-lg bg-white px-8 py-3 font-semibold text-violet-700 shadow-lg transition-all duration-200 hover:bg-violet-50 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-violet-300/50"
+            >
+              Go to Dashboard
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="w-full rounded-lg bg-red-500/20 border border-red-400/30 px-8 py-3 font-semibold text-red-100 shadow-lg transition-all duration-200 hover:bg-red-500/30 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-300/50"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+
+        {message && (
+          <div className={`mt-4 p-4 rounded-lg ${
+            message.type === 'success' 
+              ? 'bg-green-500/20 border border-green-400/30 text-green-100' 
+              : 'bg-red-500/20 border border-red-400/30 text-red-100'
+          }`}>
+            {message.text}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md">
