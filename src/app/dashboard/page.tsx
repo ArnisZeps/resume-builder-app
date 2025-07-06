@@ -1,6 +1,7 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardGuard from './_components/DashboardGuard';
+import Link from 'next/link';
 
 export default function DashboardPage() {
   
@@ -32,14 +33,15 @@ export default function DashboardPage() {
                   View Resumes
                 </button>
               </div>
-              
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-                <h2 className="text-xl font-semibold text-white mb-4">Create New Resume</h2>
-                <p className="text-white/80 mb-4">Start building your professional resume</p>
+                 <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
+              <h2 className="text-xl font-semibold text-white mb-4">Create New Resume</h2>
+              <p className="text-white/80 mb-4">Start building your professional resume</p>
+              <Link href="/builder">
                 <button className="w-full bg-yellow-400 text-violet-900 font-semibold py-2 px-4 rounded-lg hover:bg-yellow-300 transition-colors">
                   Get Started
                 </button>
-              </div>
+              </Link>
+            </div>
             </div>
           </div>
         </main>
