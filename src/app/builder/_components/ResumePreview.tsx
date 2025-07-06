@@ -1,14 +1,42 @@
 "use client";
 
-import { useResumeContext, ResumeData } from './ResumeContext';
+import { useResumeContext, TemplateType } from './ResumeContext';
 import { useEffect, useRef, useState } from 'react';
 import html2canvas from 'html2canvas';
+import { templates, templateNames } from './templates';
+import { ChevronDownIcon } from '@heroicons/react/24/outline';
 
 export default function ResumePreview() {
-  const { resumeData } = useResumeContext();
+  const { resumeData, selectedTemplate, setSelectedTemplate } = useResumeContext();
   const hiddenResumeRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const templateSelectorRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (templateSelectorRef.current && !templateSelectorRef.current.contains(event.target as Node)) {
+        setShowTemplateSelector(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (templateSelectorRef.current && !templateSelectorRef.current.contains(event.target as Node)) {
+        setShowTemplateSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const generateCanvas = async () => {
     if (!hiddenResumeRef.current || !canvasRef.current) return;
@@ -16,11 +44,11 @@ export default function ResumePreview() {
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(hiddenResumeRef.current, {
-        scale: 2, // Higher quality
+        scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: 794, // A4 width in pixels at 96 DPI
-        height: 1123, // A4 height in pixels at 96 DPI
+        width: 794,
+        height: 1123,
       });
 
       const ctx = canvasRef.current.getContext('2d');
@@ -42,83 +70,76 @@ export default function ResumePreview() {
     }, 300); 
 
     return () => clearTimeout(timeoutId);
-  }, [resumeData]);
+  }, [resumeData, selectedTemplate]);
+
+  const SelectedTemplate = templates[selectedTemplate];
 
   return (
-    <div className="w-full h-full flex items-center justify-center ">
-      <div
-        ref={hiddenResumeRef}
-        className="absolute -left-[9999px] top-0 bg-white"
-        style={{
-          width: '794px',
-          height: '1123px',
-          padding: '60px',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        }}
-      >
-        <ResumeHtmlContent resumeData={resumeData} />
+    <div className="w-full h-full flex flex-col">
+      <div className="flex-shrink-0 p-4 border-b border-white/20">
+        <div className="relative" ref={templateSelectorRef}>
+          <button
+            onClick={() => setShowTemplateSelector(!showTemplateSelector)}
+            className="flex items-center justify-between w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-200"
+          >
+            <span className="font-medium">Template: {templateNames[selectedTemplate]}</span>
+            <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${showTemplateSelector ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showTemplateSelector && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-10">
+              {Object.entries(templateNames).map(([key, name]) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setSelectedTemplate(key as TemplateType);
+                    setShowTemplateSelector(false);
+                  }}
+                  className={`w-full px-4 py-3 text-left transition-all duration-200 first:rounded-t-lg last:rounded-b-lg ${
+                    selectedTemplate === key
+                      ? 'bg-violet-600 text-white'
+                      : 'hover:bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="relative w-full h-full flex items-center justify-center">
-        {isGenerating && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-10">
-            <div className="text-gray-600">Generating preview...</div>
-          </div>
-        )}
-        
-        <canvas
-          ref={canvasRef}
-          className="max-w-full max-h-full shadow-2xl"
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div
+          ref={hiddenResumeRef}
+          className="absolute -left-[9999px] top-0 bg-white"
           style={{
-            aspectRatio: '794/1123', 
-            backgroundColor: 'white'
+            width: '794px',
+            height: '1123px',
+            padding: '60px',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
           }}
-        />
+        >
+          <SelectedTemplate resumeData={resumeData} />
+        </div>
+
+        <div className="relative w-full h-full flex items-center justify-center">
+          {isGenerating && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-10">
+              <div className="text-gray-600">Generating preview...</div>
+            </div>
+          )}
+          
+          <canvas
+            ref={canvasRef}
+            className="max-w-full max-h-full shadow-2xl"
+            style={{
+              aspectRatio: '794/1123', 
+              backgroundColor: 'white'
+            }}
+          />
+        </div>
       </div>
     </div>
-  );
-}
-
-function ResumeHtmlContent({ resumeData }: { resumeData: ResumeData }) {
-  return (
-    <>
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#111827', margin: '0 0 16px 0' }}>
-          {resumeData.personalInfo.firstName} {resumeData.personalInfo.lastName}
-        </h1>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', fontSize: '14px', color: '#4B5563', marginBottom: '8px' }}>
-          {resumeData.personalInfo.email && <span>{resumeData.personalInfo.email}</span>}
-          {resumeData.personalInfo.phone && <span>{resumeData.personalInfo.phone}</span>}
-          {resumeData.personalInfo.location && <span>{resumeData.personalInfo.location}</span>}
-        </div>
-        
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', fontSize: '14px', color: '#2563EB' }}>
-          {resumeData.personalInfo.website && <span>{resumeData.personalInfo.website}</span>}
-          {resumeData.personalInfo.linkedin && <span>{resumeData.personalInfo.linkedin}</span>}
-          {resumeData.personalInfo.github && <span>{resumeData.personalInfo.github}</span>}
-        </div>
-      </div>
-
-      {resumeData.professionalSummary && (
-        <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginBottom: '12px', paddingBottom: '4px', borderBottom: '2px solid #D1D5DB' }}>
-            Professional Summary
-          </h2>
-          <p style={{ color: '#374151', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-            {resumeData.professionalSummary}
-          </p>
-        </div>
-      )}
-
-      {!resumeData.personalInfo.firstName && !resumeData.personalInfo.lastName && (
-        <div style={{ textAlign: 'center', padding: '48px 0' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '500', color: '#111827', marginBottom: '8px' }}>Your Resume Preview</h3>
-          <p style={{ color: '#6B7280', margin: 0 }}>
-            Start filling out the form on the left to see your resume come to life!
-          </p>
-        </div>
-      )}
-    </>
   );
 }

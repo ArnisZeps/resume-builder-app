@@ -50,16 +50,21 @@ export interface ResumeData {
   }>;
 }
 
+export type TemplateType = 'classic' | 'modern' | 'minimal';
+
 interface ResumeContextType {
   resumeData: ResumeData;
+  selectedTemplate: TemplateType;
   updateResumeData: (data: Partial<ResumeData>) => void;
   updatePersonalInfo: (data: Partial<ResumeData['personalInfo']>) => void;
   updateProfessionalSummary: (summary: string) => void;
+  setSelectedTemplate: (template: TemplateType) => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('classic');
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
       firstName: '',
@@ -123,9 +128,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   return (
     <ResumeContext.Provider value={{
       resumeData,
+      selectedTemplate,
       updateResumeData,
       updatePersonalInfo,
       updateProfessionalSummary,
+      setSelectedTemplate,
     }}>
       {children}
     </ResumeContext.Provider>
