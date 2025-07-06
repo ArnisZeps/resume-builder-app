@@ -72,12 +72,24 @@ export default function ResumePreview() {
           
           <canvas
             ref={canvasRef}
-            className="max-w-full max-h-full shadow-2xl"
+            className="max-w-full max-h-[calc(100vh-200px)] shadow-2xl"
             style={{
               aspectRatio: '794/1123', 
-              backgroundColor: 'white'
+              backgroundColor: 'white',
             }}
           />
+        </div>
+      </div>
+      
+      <div className="flex-shrink-0 flex items-center justify-center p-4 border-t border-white/20">
+        <div className="flex items-center gap-4">
+          <button className="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm opacity-50 cursor-not-allowed">
+            ← Previous
+          </button>
+          <span className="text-white/70 text-sm">Page 1 of 1</span>
+          <button className="px-3 py-1 bg-white/10 border border-white/20 rounded text-white text-sm opacity-50 cursor-not-allowed">
+            Next →
+          </button>
         </div>
       </div>
     </div>
