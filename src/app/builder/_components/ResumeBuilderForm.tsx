@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useResumeContext } from "./ResumeContext";
 
-// Define the complete form schema
 const resumeFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -39,7 +38,6 @@ export default function ResumeBuilderForm() {
     },
   });
 
-  // Watch individual fields to avoid infinite loops
   const firstName = form.watch("firstName");
   const lastName = form.watch("lastName");
   const email = form.watch("email");
@@ -50,7 +48,6 @@ export default function ResumeBuilderForm() {
   const github = form.watch("github");
   const professionalSummary = form.watch("professionalSummary");
 
-  // Update personal info when individual fields change
   useEffect(() => {
     updatePersonalInfo({
       firstName: firstName || "",
@@ -64,7 +61,6 @@ export default function ResumeBuilderForm() {
     });
   }, [firstName, lastName, email, phone, location, website, linkedin, github, updatePersonalInfo]);
 
-  // Update professional summary when it changes
   useEffect(() => {
     updateProfessionalSummary(professionalSummary || "");
   }, [professionalSummary, updateProfessionalSummary]);
@@ -87,7 +83,6 @@ export default function ResumeBuilderForm() {
       </div>
 
       <div className="space-y-8 ">
-        {/* Personal Information Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Personal Information</h2>
@@ -186,7 +181,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Professional Summary Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Professional Summary</h2>
@@ -208,7 +202,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Work Experience Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Work Experience</h2>
@@ -226,7 +219,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Education Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Education</h2>
@@ -244,7 +236,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Skills Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Skills</h2>
@@ -262,7 +253,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Projects Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Projects</h2>
@@ -280,7 +270,6 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        {/* Certifications Section */}
         <div className="space-y-6">
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Certifications</h2>
