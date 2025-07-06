@@ -8,22 +8,20 @@ export default function ResumeBuilderPage() {
   return (
     <DashboardGuard>
       <ResumeProvider>
-        <div className="h-screen bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 flex flex-col">
+        <div className="h-screen bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 overflow-hidden">
           <Header />
           
-          <main className="flex overflow-hidden">
-            <div className="flex flex-1 flex-col border-r border-white/20">
-
-              
-                <ResumeBuilderForm />
+          <div className="flex h-[calc(100vh-72px)]">
+            <div className="w-1/2 overflow-y-auto border-r border-white/20">
+              <ResumeBuilderForm />
             </div>
-            
-            <div className="flex flex-1 flex-col">
-              <div className="overflow-y-auto p-6">
+
+            <div className="w-1/2 fixed right-0 top-[72px] h-[calc(100vh-72px)] overflow-hidden">
+              <div className="p-6 h-full">
                 <ResumePreview />
               </div>
             </div>
-          </main>
+          </div>
           
         </div>
       </ResumeProvider>
