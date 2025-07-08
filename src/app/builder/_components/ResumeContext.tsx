@@ -58,6 +58,11 @@ interface ResumeContextType {
   updateResumeData: (data: Partial<ResumeData>) => void;
   updatePersonalInfo: (data: Partial<ResumeData['personalInfo']>) => void;
   updateProfessionalSummary: (summary: string) => void;
+  updateExperience: (experience: ResumeData['experience']) => void;
+  updateEducation: (education: ResumeData['education']) => void;
+  updateSkills: (skills: ResumeData['skills']) => void;
+  updateProjects: (projects: ResumeData['projects']) => void;
+  updateCertifications: (certifications: ResumeData['certifications']) => void;
   setSelectedTemplate: (template: TemplateType) => void;
 }
 
@@ -77,32 +82,9 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       github: '',
     },
     professionalSummary: '',
-    experience: [
-      {
-        jobTitle: '',
-        company: '',
-        location: '',
-        startDate: '',
-        endDate: '',
-        current: false,
-        responsibilities: [''],
-      },
-    ],
-    education: [
-      {
-        degree: '',
-        institution: '',
-        location: '',
-        graduationDate: '',
-        gpa: '',
-      },
-    ],
-    skills: [
-      {
-        category: '',
-        items: [''],
-      },
-    ],
+    experience: [],
+    education: [],
+    skills: [],
     projects: [],
     certifications: [],
   });
@@ -125,6 +107,41 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateExperience = useCallback((experience: ResumeData['experience']) => {
+    setResumeData(prev => ({
+      ...prev,
+      experience
+    }));
+  }, []);
+
+  const updateEducation = useCallback((education: ResumeData['education']) => {
+    setResumeData(prev => ({
+      ...prev,
+      education
+    }));
+  }, []);
+
+  const updateSkills = useCallback((skills: ResumeData['skills']) => {
+    setResumeData(prev => ({
+      ...prev,
+      skills
+    }));
+  }, []);
+
+  const updateProjects = useCallback((projects: ResumeData['projects']) => {
+    setResumeData(prev => ({
+      ...prev,
+      projects
+    }));
+  }, []);
+
+  const updateCertifications = useCallback((certifications: ResumeData['certifications']) => {
+    setResumeData(prev => ({
+      ...prev,
+      certifications
+    }));
+  }, []);
+
   return (
     <ResumeContext.Provider value={{
       resumeData,
@@ -132,6 +149,11 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       updateResumeData,
       updatePersonalInfo,
       updateProfessionalSummary,
+      updateExperience,
+      updateEducation,
+      updateSkills,
+      updateProjects,
+      updateCertifications,
       setSelectedTemplate,
     }}>
       {children}

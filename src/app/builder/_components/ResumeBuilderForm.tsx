@@ -7,6 +7,11 @@ import * as z from "zod";
 import { TemplateType, useResumeContext } from "./ResumeContext";
 import { templateNames } from "./templates";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import WorkExperienceSection from "./sections/WorkExperienceSection";
+import EducationSection from "./sections/EducationSection";
+import SkillsSection from "./sections/SkillsSection";
+import ProjectsSection from "./sections/ProjectsSection";
+import CertificationsSection from "./sections/CertificationsSection";
 
 const resumeFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -235,90 +240,15 @@ export default function ResumeBuilderForm() {
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="border-b border-white/20 pb-4">
-            <h2 className="text-xl font-bold text-white mb-2">Work Experience</h2>
-            <p className="text-white/70 text-sm">Your professional work history and achievements</p>
-          </div>
+        <WorkExperienceSection />
 
-          <div className="text-center py-8 text-white/60">
-            <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-            </div>
-            <h3 className="font-medium mb-2">Work Experience Section</h3>
-            <p className="text-sm">Coming soon! Continue with the sections above.</p>
-          </div>
-        </div>
+        <EducationSection />
 
-        <div className="space-y-6">
-          <div className="border-b border-white/20 pb-4">
-            <h2 className="text-xl font-bold text-white mb-2">Education</h2>
-            <p className="text-white/70 text-sm">Your educational background and academic achievements</p>
-          </div>
+        <SkillsSection />
 
-          <div className="text-center py-8 text-white/60">
-            <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-            </div>
-            <h3 className="font-medium mb-2">Education Section</h3>
-            <p className="text-sm">Coming soon! Continue with the sections above.</p>
-          </div>
-        </div>
+        <ProjectsSection />
 
-        <div className="space-y-6">
-          <div className="border-b border-white/20 pb-4">
-            <h2 className="text-xl font-bold text-white mb-2">Skills</h2>
-            <p className="text-white/70 text-sm">Your technical and professional skills</p>
-          </div>
-
-          <div className="text-center py-8 text-white/60">
-            <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-            </div>
-            <h3 className="font-medium mb-2">Skills Section</h3>
-            <p className="text-sm">Coming soon! Continue with the sections above.</p>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="border-b border-white/20 pb-4">
-            <h2 className="text-xl font-bold text-white mb-2">Projects</h2>
-            <p className="text-white/70 text-sm">Notable projects and portfolio items</p>
-          </div>
-
-          <div className="text-center py-8 text-white/60">
-            <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-            </div>
-            <h3 className="font-medium mb-2">Projects Section</h3>
-            <p className="text-sm">Coming soon! Continue with the sections above.</p>
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="border-b border-white/20 pb-4">
-            <h2 className="text-xl font-bold text-white mb-2">Certifications</h2>
-            <p className="text-white/70 text-sm">Professional certifications and credentials</p>
-          </div>
-
-          <div className="text-center py-8 text-white/60">
-            <div className="mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-              </svg>
-            </div>
-            <h3 className="font-medium mb-2">Certifications Section</h3>
-            <p className="text-sm">Coming soon! Continue with the sections above.</p>
-          </div>
-        </div>
+        <CertificationsSection />
       </div>
     </div>
   );
