@@ -14,6 +14,7 @@ import ProjectsSection from "./sections/ProjectsSection";
 import CertificationsSection from "./sections/CertificationsSection";
 import { useResumeApi } from "@/hooks/useResumeApi";
 import { appwriteAuth } from "@/lib/appwrite";
+import { useResumeLoader } from "./useResumeLoader";
 
 const resumeFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -32,8 +33,9 @@ type ResumeFormData = z.infer<typeof resumeFormSchema>;
 export default function ResumeBuilderForm() {
   const { resumeData, updatePersonalInfo, updateProfessionalSummary, setSelectedTemplate, selectedTemplate } = useResumeContext();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
-  const { saveResume, isLoading } = useResumeApi();
+  const { saveResume, updateResume, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const { resumeId, isEditing, isLoadingResume, loadError } = useResumeLoader();
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
@@ -77,19 +79,43 @@ export default function ResumeBuilderForm() {
     updateProfessionalSummary(professionalSummary || "");
   }, [professionalSummary, updateProfessionalSummary]);
 
+  useEffect(() => {
+    form.reset({
+      firstName: resumeData.personalInfo.firstName,
+      lastName: resumeData.personalInfo.lastName,
+      email: resumeData.personalInfo.email,
+      phone: resumeData.personalInfo.phone,
+      location: resumeData.personalInfo.location,
+      website: resumeData.personalInfo.website,
+      linkedin: resumeData.personalInfo.linkedin,
+      github: resumeData.personalInfo.github,
+      professionalSummary: resumeData.personalInfo.professionalSummary,
+    });
+  }, [resumeData.personalInfo, form]);
+
   const handleSaveResume = async () => {
     setSaveStatus('idle');
     const currentUser = await appwriteAuth.getCurrentUser();
+    
     try {
-      const result = await saveResume({
+      const resumePayload = {
         ...resumeData,
-        userId: currentUser.user?.$id || '',
         template: selectedTemplate
-      });
+      };
+
+      let result;
+      
+      if (isEditing && resumeId) {
+        result = await updateResume(resumeId, resumePayload);
+      } else {
+        result = await saveResume({
+          ...resumePayload,
+          userId: currentUser.user?.$id || '',
+        });
+      }
       
       if (result.success) {
         setSaveStatus('success');
-        // Reset status after 3 seconds
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
         setSaveStatus('error');
@@ -102,10 +128,10 @@ export default function ResumeBuilderForm() {
   };
 
   const getSaveButtonText = () => {
-    if (isLoading) return 'Saving...';
-    if (saveStatus === 'success') return 'Saved!';
+    if (isLoading) return isEditing ? 'Updating...' : 'Saving...';
+    if (saveStatus === 'success') return isEditing ? 'Updated!' : 'Saved!';
     if (saveStatus === 'error') return 'Save Failed - Retry';
-    return 'Save Resume';
+    return isEditing ? 'Update Resume' : 'Save Resume';
   };
 
   const getSaveButtonStyle = () => {
@@ -116,7 +142,32 @@ export default function ResumeBuilderForm() {
   };
 
   return (
-    <div className="p-6 ">
+    <div className="p-6 relative">
+      {isLoadingResume && (
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+          <div className="bg-white/20 backdrop-blur-lg rounded-lg p-6 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400 mx-auto mb-3"></div>
+            <p className="text-white font-medium">Loading resume...</p>
+          </div>
+        </div>
+      )}
+
+      {loadError && (
+        <div className="mb-6 bg-red-500/20 border border-red-500/50 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-200">Failed to load resume</h3>
+              <p className="mt-1 text-sm text-red-300">{loadError}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex border-b border-white/20 flex-shrink-0 gap-9">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Resume Builder</h1>

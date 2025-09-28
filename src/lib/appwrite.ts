@@ -1,4 +1,4 @@
-import { Client, Account, ID, Databases } from 'appwrite';
+import { Client, Account, ID, Databases, Query } from 'appwrite';
 
 const client = new Client();
 
@@ -9,7 +9,7 @@ client
 export const account = new Account(client);
 export const databases = new Databases(client);
 
-export { client, ID };
+export { client, ID, Query };
 
 export const appwriteAuth = {
     async createAccount(email: string, password: string, name: string) {
