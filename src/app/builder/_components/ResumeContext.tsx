@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
-export interface ResumeData {
+export interface ResumeData extends Record<string, unknown>{
   personalInfo: {
     firstName: string;
     lastName: string;
@@ -12,8 +12,8 @@ export interface ResumeData {
     website: string;
     linkedin: string;
     github: string;
+    professionalSummary: string;
   };
-  professionalSummary: string;
   experience: Array<{
     jobTitle: string;
     company: string;
@@ -80,8 +80,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       website: '',
       linkedin: '',
       github: '',
+      professionalSummary: '',
     },
-    professionalSummary: '',
     experience: [],
     education: [],
     skills: [],
@@ -103,7 +103,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const updateProfessionalSummary = useCallback((summary: string) => {
     setResumeData(prev => ({
       ...prev,
-      professionalSummary: summary
+      personalInfo: { ...prev.personalInfo, professionalSummary: summary }
     }));
   }, []);
 

@@ -12,6 +12,8 @@ import EducationSection from "./sections/EducationSection";
 import SkillsSection from "./sections/SkillsSection";
 import ProjectsSection from "./sections/ProjectsSection";
 import CertificationsSection from "./sections/CertificationsSection";
+import { useResumeApi } from "@/hooks/useResumeApi";
+import { appwriteAuth } from "@/lib/appwrite";
 
 const resumeFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -30,6 +32,8 @@ type ResumeFormData = z.infer<typeof resumeFormSchema>;
 export default function ResumeBuilderForm() {
   const { resumeData, updatePersonalInfo, updateProfessionalSummary, setSelectedTemplate, selectedTemplate } = useResumeContext();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const { saveResume, isLoading } = useResumeApi();
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
@@ -42,7 +46,7 @@ export default function ResumeBuilderForm() {
       website: resumeData.personalInfo.website,
       linkedin: resumeData.personalInfo.linkedin,
       github: resumeData.personalInfo.github,
-      professionalSummary: resumeData.professionalSummary,
+      professionalSummary: resumeData.personalInfo.professionalSummary,
     },
   });
 
@@ -73,6 +77,44 @@ export default function ResumeBuilderForm() {
     updateProfessionalSummary(professionalSummary || "");
   }, [professionalSummary, updateProfessionalSummary]);
 
+  const handleSaveResume = async () => {
+    setSaveStatus('idle');
+    const currentUser = await appwriteAuth.getCurrentUser();
+    try {
+      const result = await saveResume({
+        ...resumeData,
+        userId: currentUser.user?.$id || '',
+        template: selectedTemplate
+      });
+      
+      if (result.success) {
+        setSaveStatus('success');
+        // Reset status after 3 seconds
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('error');
+        console.error('Save failed:', result.error);
+      }
+    } catch (error) {
+      setSaveStatus('error');
+      console.error('Save error:', error);
+    }
+  };
+
+  const getSaveButtonText = () => {
+    if (isLoading) return 'Saving...';
+    if (saveStatus === 'success') return 'Saved!';
+    if (saveStatus === 'error') return 'Save Failed - Retry';
+    return 'Save Resume';
+  };
+
+  const getSaveButtonStyle = () => {
+    if (saveStatus === 'success') return 'bg-green-500 hover:bg-green-400';
+    if (saveStatus === 'error') return 'bg-red-500 hover:bg-red-400';
+    if (isLoading) return 'bg-gray-400 cursor-not-allowed';
+    return 'bg-yellow-400 hover:bg-yellow-300';
+  };
+
   return (
     <div className="p-6 ">
       <div className="flex border-b border-white/20 flex-shrink-0 gap-9">
@@ -83,9 +125,11 @@ export default function ResumeBuilderForm() {
         <div className="flex-1 pt-6 pb-4">
           <button
             type="button"
-            className="w-full px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-violet-900 font-semibold rounded-lg transition-all duration-200"
+            onClick={handleSaveResume}
+            disabled={isLoading}
+            className={`w-full px-6 py-3 text-violet-900 font-semibold rounded-lg transition-all duration-200 ${getSaveButtonStyle()}`}
           >
-            Save Resume
+            {getSaveButtonText()}
           </button>
         </div>
       </div>
