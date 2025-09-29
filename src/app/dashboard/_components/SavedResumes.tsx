@@ -16,22 +16,13 @@ interface Resume {
 
 export default function SavedResumes() {
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const { getUserResumes, deleteResume, testListDocuments, isLoading, error } = useResumeApi();
-  console.log("SavedResumes render - resumes:", resumes, "isLoading:", isLoading, "error:", error);
+  const { getUserResumes, deleteResume, isLoading, error } = useResumeApi();
 
-  const handleTestQuery = async () => {
-    console.log("Testing direct query...");
-    const result = await testListDocuments();
-    console.log("Test result:", result);
-  };
   useEffect(() => {
     const loadUserAndResumes = async () => {
       try {
-        // Get current user
         const userResponse = await appwriteAuth.getCurrentUser();
         if (userResponse.success && userResponse.user) {
-          // Load user's resumes
-          console.log("Current user:", userResponse.user);
           const resumesResponse = await getUserResumes(userResponse.user.$id);
           if (resumesResponse.success && resumesResponse.data) {
             setResumes(resumesResponse.data);
@@ -53,7 +44,6 @@ export default function SavedResumes() {
     try {
       const response = await deleteResume(resumeId);
       if (response.success) {
-        // Remove from local state
         setResumes((prev) => prev.filter((resume) => resume.id !== resumeId));
       } else {
         alert("Failed to delete resume. Please try again.");
@@ -127,14 +117,7 @@ export default function SavedResumes() {
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-white mb-2">My Resumes</h2>
-        <p className="text-white/80">Manage your saved resumes</p>
-        <button onClick={handleTestQuery} className="mt-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
-          Test Database Connection
-        </button>
-      </div>
-
+    
       <div className="space-y-4">
         {resumes.map((resume) => (
           <div key={resume.id} className="bg-white/20 rounded-xl p-4 border border-white/30 hover:bg-white/25 transition-colors">
