@@ -28,13 +28,13 @@ export function ModernTemplate({ resumeData }: { resumeData: ResumeData }) {
         <div style={{ width: '4px', backgroundColor: '#6366F1', margin: '0 24px' }}></div>
       </div>
 
-      {resumeData.professionalSummary && (
+      {resumeData.personalInfo.professionalSummary && (
         <div style={{ marginBottom: '32px' }}>
           <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#6366F1', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             Professional Summary
           </h2>
           <p style={{ color: '#374151', fontSize: '15px', lineHeight: '1.7', margin: 0 }}>
-            {resumeData.professionalSummary}
+            {resumeData.personalInfo.professionalSummary}
           </p>
         </div>
       )}
