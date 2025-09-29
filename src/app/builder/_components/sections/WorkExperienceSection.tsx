@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useResumeContext } from "../ResumeContext";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import DateInput from "./DateInput";
 
 export default function WorkExperienceSection() {
   const { resumeData, updateExperience } = useResumeContext();
-  const [experiences, setExperiences] = useState(resumeData.experience);
+  const [experiences, setExperiences] = useState([...resumeData.experience]);
+
+  useEffect(() => {
+    setExperiences([...resumeData.experience]);
+  }, [resumeData.experience]);
 
   const addExperience = () => {
     const newExperience = {

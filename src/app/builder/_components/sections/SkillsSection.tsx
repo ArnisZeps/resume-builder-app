@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useResumeContext } from '../ResumeContext';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function SkillsSection() {
   const { resumeData, updateSkills } = useResumeContext();
-  const [skills, setSkills] = useState(resumeData.skills);
+  const [skills, setSkills] = useState([...resumeData.skills]);
+
+  useEffect(() => {
+      setSkills([...resumeData.skills]);
+  }, [resumeData.skills]);
 
   const addSkillCategory = () => {
     const newCategory = {

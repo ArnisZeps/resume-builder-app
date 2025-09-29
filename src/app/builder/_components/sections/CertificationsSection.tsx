@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useResumeContext } from '../ResumeContext';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import DateInput from './DateInput';
 
 export default function CertificationsSection() {
   const { resumeData, updateCertifications } = useResumeContext();
-  const [certifications, setCertifications] = useState(resumeData.certifications);
+  const [certifications, setCertifications] = useState([...resumeData.certifications]);
 
+  useEffect(() => {
+    setCertifications([...resumeData.certifications]);
+  }, [resumeData.certifications]);
+  
   const addCertification = () => {
     const newCertification = {
       name: '',

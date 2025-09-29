@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useResumeContext } from '../ResumeContext';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import DateInput from './DateInput';
 
 export default function ProjectsSection() {
   const { resumeData, updateProjects } = useResumeContext();
-  const [projects, setProjects] = useState(resumeData.projects);
+  const [projects, setProjects] = useState([...resumeData.projects]);
+
+  useEffect(() => {
+      setProjects([...resumeData.projects]);
+  }, [resumeData.projects]);
 
   const addProject = () => {
     const newProject = {

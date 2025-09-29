@@ -36,6 +36,8 @@ export function useResumeLoader() {
             projects: response.data.projects,
             certifications: response.data.certifications,
           });
+
+          
           
           setSelectedTemplate(response.data.template as TemplateType);
         } else {
