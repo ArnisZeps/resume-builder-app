@@ -116,12 +116,11 @@ export default function SavedResumes() {
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-    
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">  
       <div className="space-y-4">
         {resumes.map((resume) => (
           <div key={resume.id} className="bg-white/20 rounded-xl p-4 border border-white/30 hover:bg-white/25 transition-colors">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-3 sm:space-y-0">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <DocumentIcon className="h-5 w-5 text-white/80" />
@@ -134,15 +133,15 @@ export default function SavedResumes() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 ml-4">
+              <div className="flex items-center gap-2 sm:ml-4">
                 <Link href={`/builder?resumeId=${resume.id}`}>
-                  <button className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors" title="Edit Resume">
+                  <button className="p-3 sm:p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors" title="Edit Resume">
                     <PencilIcon className="h-4 w-4" />
                   </button>
                 </Link>
 
                 <button
-                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-3 sm:p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                   title="Preview Resume"
                   onClick={() => {
                     // TODO: Implement preview functionality
@@ -153,7 +152,7 @@ export default function SavedResumes() {
                 </button>
 
                 <button
-                  className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-3 sm:p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-lg transition-colors"
                   title="Duplicate Resume"
                   onClick={() => {
                     // TODO: Implement duplicate functionality
@@ -165,7 +164,7 @@ export default function SavedResumes() {
 
                 <button
                   onClick={() => handleDeleteResume(resume.id, resume.title)}
-                  className="p-2 text-red-300 hover:text-red-200 hover:bg-red-500/20 rounded-lg transition-colors"
+                  className="p-3 sm:p-2 text-red-300 hover:text-red-200 hover:bg-red-500/20 rounded-lg transition-colors"
                   title="Delete Resume"
                 >
                   <TrashIcon className="h-4 w-4" />
