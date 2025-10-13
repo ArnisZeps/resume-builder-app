@@ -21,13 +21,13 @@ export function ClassicTemplate({ resumeData }: { resumeData: ResumeData }) {
         </div>
       </div>
 
-      {resumeData.personalInfo.professionalSummary && (
+      {resumeData.professionalSummary && (
         <div style={{ marginBottom: '32px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#111827', marginBottom: '12px', paddingBottom: '4px', borderBottom: '2px solid #D1D5DB' }}>
             Professional Summary
           </h2>
           <p style={{ color: '#374151', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>
-            {resumeData.personalInfo.professionalSummary}
+            {resumeData.professionalSummary}
           </p>
         </div>
       )}

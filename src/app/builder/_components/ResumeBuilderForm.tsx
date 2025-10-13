@@ -48,7 +48,7 @@ export default function ResumeBuilderForm() {
       website: resumeData.personalInfo.website,
       linkedin: resumeData.personalInfo.linkedin,
       github: resumeData.personalInfo.github,
-      professionalSummary: resumeData.personalInfo.professionalSummary,
+      professionalSummary: resumeData.professionalSummary,
     },
   });
 
@@ -73,11 +73,13 @@ export default function ResumeBuilderForm() {
       linkedin: linkedin || "",
       github: github || "",
     });
-  }, [firstName, lastName, email, phone, location, website, linkedin, github, updatePersonalInfo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstName, lastName, email, phone, location, website, linkedin, github]);
 
   useEffect(() => {
     updateProfessionalSummary(professionalSummary || "");
-  }, [professionalSummary, updateProfessionalSummary]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionalSummary]);
 
   useEffect(() => {
     form.reset({
@@ -89,7 +91,6 @@ export default function ResumeBuilderForm() {
       website: resumeData.personalInfo.website,
       linkedin: resumeData.personalInfo.linkedin,
       github: resumeData.personalInfo.github,
-      professionalSummary: resumeData.personalInfo.professionalSummary,
     });
   }, [resumeData.personalInfo, form]);
 

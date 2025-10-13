@@ -23,13 +23,13 @@ export function MinimalTemplate({ resumeData }: { resumeData: ResumeData }) {
         <div style={{ width: '100%', height: '1px', backgroundColor: '#E5E7EB', marginTop: '24px' }}></div>
       </div>
 
-      {resumeData.personalInfo.professionalSummary && (
+      {resumeData.professionalSummary && (
         <div style={{ marginBottom: '40px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Summary
           </h2>
           <p style={{ color: '#374151', fontSize: '15px', lineHeight: '1.6', margin: 0, fontWeight: '300' }}>
-            {resumeData.personalInfo.professionalSummary}
+            {resumeData.professionalSummary}
           </p>
         </div>
       )}

@@ -159,8 +159,8 @@ export function useResumeApi(): UseResumeApiReturn {
           website: '',
           linkedin: '',
           github: '',
-          professionalSummary: ''
         },
+        professionalSummary: parsedResumeData.professionalSummary || '',
         experience: parsedResumeData.experience || [],
         education: parsedResumeData.education || [],
         skills: parsedResumeData.skills || [],
