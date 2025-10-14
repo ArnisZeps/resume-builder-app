@@ -36,7 +36,7 @@ export default function ResumeBuilderForm() {
   const { saveResume, updateResume, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { resumeId, isEditing, isLoadingResume, loadError } = useResumeLoader();
-
+  const [hasLoadedResume, setHasLoadedResume] = useState(false);
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
@@ -73,6 +73,7 @@ export default function ResumeBuilderForm() {
       linkedin: linkedin || "",
       github: github || "",
     });
+    console.log(email)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstName, lastName, email, phone, location, website, linkedin, github]);
 
@@ -81,18 +82,31 @@ export default function ResumeBuilderForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalSummary]);
 
+  // Only reset form when loading an existing resume (editing mode)
   useEffect(() => {
-    form.reset({
-      firstName: resumeData.personalInfo.firstName,
-      lastName: resumeData.personalInfo.lastName,
-      email: resumeData.personalInfo.email,
-      phone: resumeData.personalInfo.phone,
-      location: resumeData.personalInfo.location,
-      website: resumeData.personalInfo.website,
-      linkedin: resumeData.personalInfo.linkedin,
-      github: resumeData.personalInfo.github,
-    });
-  }, [resumeData.personalInfo, form]);
+    if (isEditing && resumeId && !hasLoadedResume) {
+      console.log("Resetting form with loaded resume data:", resumeData.personalInfo.email);
+      form.reset({
+        firstName: resumeData.personalInfo.firstName,
+        lastName: resumeData.personalInfo.lastName,
+        email: resumeData.personalInfo.email,
+        phone: resumeData.personalInfo.phone,
+        location: resumeData.personalInfo.location,
+        website: resumeData.personalInfo.website,
+        linkedin: resumeData.personalInfo.linkedin,
+        github: resumeData.personalInfo.github,
+        professionalSummary: resumeData.professionalSummary,
+      });
+      setHasLoadedResume(true);
+    }
+  }, [resumeData.personalInfo, resumeData.professionalSummary, form, isEditing, resumeId, hasLoadedResume]);
+
+  // Reset flag when switching between new and edit modes
+  useEffect(() => {
+    if (!isEditing && hasLoadedResume) {
+      setHasLoadedResume(false);
+    }
+  }, [isEditing, hasLoadedResume]);
 
   const handleSaveResume = async () => {
     setSaveStatus('idle');

@@ -10,7 +10,7 @@ import { EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ResumeBuilderPage() {
   const [showPreview, setShowPreview] = useState(false);
-
+  console.log("Rerendering ResumeBuilderPage");
   return (
     <DashboardGuard>
       <ResumeProvider>
