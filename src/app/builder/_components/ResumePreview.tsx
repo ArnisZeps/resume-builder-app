@@ -18,8 +18,25 @@ export default function ResumePreview() {
 
     setIsGenerating(true);
     try {
-      // First, capture the full content to determine total height
-      const tempCanvas = await html2canvas(hiddenResumeRef.current, {
+      const findSectionBreaks = () => {
+        const sections = hiddenResumeRef.current!.querySelectorAll('div[style*="marginBottom"], div[style*="margin-bottom"]');
+        const breaks: number[] = [0]; 
+        
+        sections.forEach((section) => {
+          const rect = section.getBoundingClientRect();
+          const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
+          const relativeTop = rect.top - containerRect.top;
+          
+          if (relativeTop > 0) {
+            breaks.push(relativeTop);
+          }
+        });
+        
+        return breaks.sort((a, b) => a - b);
+      };
+
+      // First, capture the full content
+      const fullCanvas = await html2canvas(hiddenResumeRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
@@ -27,32 +44,67 @@ export default function ResumePreview() {
         height: hiddenResumeRef.current.scrollHeight,
       });
 
-      const pageHeight = 1123 * 2; // Account for scale
-      const contentHeight = tempCanvas.height;
-      const calculatedPages = Math.max(1, Math.ceil(contentHeight / pageHeight));
-      
-      setTotalPages(calculatedPages);
+      const pageHeight = 1123; 
+      const topMargin = 60;
+      const contentHeight = fullCanvas.height / 2;
+      const sectionBreaks = findSectionBreaks();
 
-      // Generate canvas for current page
-      const yOffset = (currentPage - 1) * pageHeight;
+      const pageBreaks: number[] = [0];
+      let currentPageStart = 0;
       
+      for (let i = 1; i < sectionBreaks.length; i++) {
+        const sectionStart = sectionBreaks[i];
+        const effectivePageHeight = pageBreaks.length === 1 ? pageHeight : pageHeight - topMargin;
+        
+        if (sectionStart - currentPageStart <= effectivePageHeight) {
+          continue;
+        }
+        
+        let lastFittingSection = currentPageStart;
+        for (let j = i - 1; j >= 0; j--) {
+          if (sectionBreaks[j] - currentPageStart <= effectivePageHeight) {
+            lastFittingSection = sectionBreaks[j];
+            break;
+          }
+        }
+        
+        if (lastFittingSection > currentPageStart) {
+          pageBreaks.push(lastFittingSection);
+          currentPageStart = lastFittingSection;
+        }
+      }
+      
+      setTotalPages(pageBreaks.length);
+
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
         canvasRef.current.width = 794;
         canvasRef.current.height = 1123;
         
-        // Clear canvas
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, 794, 1123);
         
-        // Draw the portion of content for current page
-        ctx.drawImage(
-          tempCanvas,
-          0, yOffset, // Source x, y
-          794 * 2, Math.min(pageHeight, contentHeight - yOffset), // Source width, height
-          0, 0, // Destination x, y
-          794, Math.min(1123, (contentHeight - yOffset) / 2) // Destination width, height
-        );
+        if (currentPage <= pageBreaks.length) {
+          const pageStartY = pageBreaks[currentPage - 1] || 0;
+          const nextPageStartY = pageBreaks[currentPage] || contentHeight;
+          const isFirstPage = currentPage === 1;
+          
+          const sourceY = pageStartY * 2; // Scale for canvas
+          const maxSourceHeight = (nextPageStartY - pageStartY) * 2;
+          const availableHeight = isFirstPage ? pageHeight : pageHeight - topMargin;
+          const sourceHeight = Math.min(maxSourceHeight, availableHeight * 2, fullCanvas.height - sourceY);
+          const destY = isFirstPage ? 0 : topMargin;
+          
+          if (sourceHeight > 0) {
+            ctx.drawImage(
+              fullCanvas,
+              0, sourceY, // Source x, y
+              794 * 2, sourceHeight, // Source width, height
+              0, destY, // Destination x, y
+              794, sourceHeight / 2 // Destination width, height
+            );
+          }
+        }
       }
     } catch (error) {
       console.error('Error generating canvas:', error);
