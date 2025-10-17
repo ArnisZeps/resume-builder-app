@@ -18,24 +18,7 @@ export default function ResumePreview() {
 
     setIsGenerating(true);
     try {
-      const findSectionBreaks = () => {
-        const sections = hiddenResumeRef.current!.querySelectorAll('div[style*="marginBottom"], div[style*="margin-bottom"]');
-        const breaks: number[] = [0]; 
-        
-        sections.forEach((section) => {
-          const rect = section.getBoundingClientRect();
-          const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
-          const relativeTop = rect.top - containerRect.top;
-          
-          if (relativeTop > 0) {
-            breaks.push(relativeTop);
-          }
-        });
-        
-        return breaks.sort((a, b) => a - b);
-      };
-
-      // First, capture the full content
+      // Capture full content first
       const fullCanvas = await html2canvas(hiddenResumeRef.current, {
         scale: 2,
         useCORS: true,
@@ -44,38 +27,46 @@ export default function ResumePreview() {
         height: hiddenResumeRef.current.scrollHeight,
       });
 
-      const pageHeight = 1123; 
-      const topMargin = 60;
-      const contentHeight = fullCanvas.height / 2;
-      const sectionBreaks = findSectionBreaks();
-
+      const pageHeight = 1123; // Display units
+      const topMargin = 60; // Display units
+      
+      // Get section positions
+      const sections: { start: number; height: number }[] = [];
+      Array.from(hiddenResumeRef.current.children).forEach((child, index) => {
+        const rect = child.getBoundingClientRect();
+        const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
+        const relativeTop = rect.top - containerRect.top;
+        
+        sections.push({
+          start: relativeTop,
+          height: rect.height
+        });
+        
+        console.log(`Section ${index}: start=${relativeTop}, height=${rect.height}, end=${relativeTop + rect.height}`);
+      });
+      
+      // Calculate page breaks that respect section boundaries
       const pageBreaks: number[] = [0];
       let currentPageStart = 0;
       
-      for (let i = 1; i < sectionBreaks.length; i++) {
-        const sectionStart = sectionBreaks[i];
-        const effectivePageHeight = pageBreaks.length === 1 ? pageHeight : pageHeight - topMargin;
+      for (const section of sections) {
+        const sectionEnd = section.start + section.height;
+        const isFirstPage = pageBreaks.length === 1;
+        const availableHeight = isFirstPage ? pageHeight : pageHeight - topMargin;
         
-        if (sectionStart - currentPageStart <= effectivePageHeight) {
-          continue;
-        }
-        
-        let lastFittingSection = currentPageStart;
-        for (let j = i - 1; j >= 0; j--) {
-          if (sectionBreaks[j] - currentPageStart <= effectivePageHeight) {
-            lastFittingSection = sectionBreaks[j];
-            break;
-          }
-        }
-        
-        if (lastFittingSection > currentPageStart) {
-          pageBreaks.push(lastFittingSection);
-          currentPageStart = lastFittingSection;
+        // Check if the entire section fits on current page
+        if (sectionEnd - currentPageStart > availableHeight) {
+          // Section doesn't fit, start a new page at this section
+          pageBreaks.push(section.start);
+          currentPageStart = section.start;
+          console.log(`New page break at: ${section.start} (section was too tall for current page)`);
         }
       }
       
       setTotalPages(pageBreaks.length);
-
+      console.log('Page breaks:', pageBreaks);
+      
+      // Render current page
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
         canvasRef.current.width = 794;
@@ -85,35 +76,36 @@ export default function ResumePreview() {
         ctx.fillRect(0, 0, 794, 1123);
         
         if (currentPage <= pageBreaks.length) {
-          const pageStartY = pageBreaks[currentPage - 1] || 0;
-          const nextPageStartY = pageBreaks[currentPage] || contentHeight;
+          const pageStartY = pageBreaks[currentPage - 1];
+          const nextPageStartY = pageBreaks[currentPage] || (fullCanvas.height / 2);
           const isFirstPage = currentPage === 1;
           
           const sourceY = pageStartY * 2; // Scale for canvas
           const maxSourceHeight = (nextPageStartY - pageStartY) * 2;
-          const availableHeight = isFirstPage ? pageHeight : pageHeight - topMargin;
-          const sourceHeight = Math.min(maxSourceHeight, availableHeight * 2, fullCanvas.height - sourceY);
+          const availableCanvasHeight = isFirstPage ? pageHeight * 2 : (pageHeight - topMargin) * 2;
+          const sourceHeight = Math.min(maxSourceHeight, availableCanvasHeight, fullCanvas.height - sourceY);
           const destY = isFirstPage ? 0 : topMargin;
+          
+          console.log(`Page ${currentPage}: sourceY=${sourceY}, sourceHeight=${sourceHeight}, destY=${destY}`);
           
           if (sourceHeight > 0) {
             ctx.drawImage(
               fullCanvas,
-              0, sourceY, // Source x, y
-              794 * 2, sourceHeight, // Source width, height
-              0, destY, // Destination x, y
-              794, sourceHeight / 2 // Destination width, height
+              0, sourceY,
+              794 * 2, sourceHeight,
+              0, destY,
+              794, sourceHeight / 2
             );
           }
         }
       }
+      
     } catch (error) {
       console.error('Error generating canvas:', error);
     } finally {
       setIsGenerating(false);
     }
-  }, [currentPage]);
-
-  useEffect(() => {
+  }, [currentPage]);  useEffect(() => {
     const timeoutId = setTimeout(() => {
       generateCanvas();
     }, 300); 
