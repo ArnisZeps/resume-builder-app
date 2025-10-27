@@ -73,7 +73,6 @@ export default function ResumeBuilderForm() {
       linkedin: linkedin || "",
       github: github || "",
     });
-    console.log(email)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstName, lastName, email, phone, location, website, linkedin, github]);
 
@@ -85,7 +84,6 @@ export default function ResumeBuilderForm() {
   // Only reset form when loading an existing resume (editing mode)
   useEffect(() => {
     if (isEditing && resumeId && !hasLoadedResume) {
-      console.log("Resetting form with loaded resume data:", resumeData.personalInfo.email);
       form.reset({
         firstName: resumeData.personalInfo.firstName,
         lastName: resumeData.personalInfo.lastName,

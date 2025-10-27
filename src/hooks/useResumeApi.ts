@@ -35,8 +35,6 @@ export function useResumeApi(): UseResumeApiReturn {
     setError(null);
 
     try {
-      console.log('Saving resume data:', resumeData);
-
       const resumeDocument = {
         userId: resumeData.userId || 'temp_user',
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
@@ -60,8 +58,6 @@ export function useResumeApi(): UseResumeApiReturn {
         throw new Error('Failed to create resume');
       }
 
-      console.log('Resume saved successfully:', response.document.$id);
-      
       return { 
         success: true, 
         resumeId: response.document.$id,
@@ -83,8 +79,6 @@ export function useResumeApi(): UseResumeApiReturn {
     setError(null);
 
     try {
-      console.log('Updating resume:', resumeId, resumeData);
-
       const updateDocument = {
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
         resumeData: JSON.stringify({
@@ -108,8 +102,6 @@ export function useResumeApi(): UseResumeApiReturn {
         throw new Error('Failed to update resume');
       }
 
-      console.log('Resume updated successfully:', resumeId);
-
       return {
         success: true,
         resumeId,
@@ -131,8 +123,6 @@ export function useResumeApi(): UseResumeApiReturn {
     setError(null);
 
     try {
-      console.log('Fetching resume:', resumeId);
-
       const response = await appwriteDatabase.getDocument(
         COLLECTIONS.RESUMES,
         resumeId
@@ -143,10 +133,7 @@ export function useResumeApi(): UseResumeApiReturn {
       }
 
       const doc = response.document;
-      console.log('Resume fetched successfully:', doc);
-
       const parsedResumeData = doc.resumeData ? JSON.parse(doc.resumeData) : {};
-
       const resumeData: ResumeData & { template: string; id: string } = {
         id: doc.$id,
         template: parsedResumeData.template || 'classic',
@@ -188,16 +175,11 @@ export function useResumeApi(): UseResumeApiReturn {
     setError(null);
 
     try {
-      console.log('Fetching user resumes for userId:', userId);
-      console.log('Using collection:', COLLECTIONS.RESUMES);
-      console.log('Query:', Query.equal('userId', userId));
-
       const response = await appwriteDatabase.listDocuments(
         COLLECTIONS.RESUMES,
         [Query.equal('userId', userId)]
       );
 
-      console.log('Raw response from fetching user resumes:', response);
 
       if (!response.success) {
         console.error('Database query failed:', response.error);
@@ -211,8 +193,6 @@ export function useResumeApi(): UseResumeApiReturn {
           data: []
         };
       }
-
-      console.log('User resumes fetched successfully:', response.documents.length, 'documents');
 
       // Transform documents to summary format
       const resumes = response.documents.map(doc => {
@@ -254,9 +234,7 @@ export function useResumeApi(): UseResumeApiReturn {
 
   const testListDocuments = useCallback(async () => {
     try {
-      console.log('Testing listDocuments without filters...');
       const response = await appwriteDatabase.listDocuments(COLLECTIONS.RESUMES);
-      console.log('Test response:', response);
       return {
         success: true,
         data: response
@@ -275,8 +253,6 @@ export function useResumeApi(): UseResumeApiReturn {
     setError(null);
 
     try {
-      console.log('Deleting resume:', resumeId);
-
       const response = await appwriteDatabase.deleteDocument(
         COLLECTIONS.RESUMES,
         resumeId
@@ -285,8 +261,6 @@ export function useResumeApi(): UseResumeApiReturn {
       if (!response.success) {
         throw new Error('Failed to delete resume');
       }
-
-      console.log('Resume deleted successfully');
 
       return {
         success: true,

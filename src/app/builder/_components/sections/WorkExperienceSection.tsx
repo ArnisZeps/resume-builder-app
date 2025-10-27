@@ -26,7 +26,6 @@ export default function WorkExperienceSection() {
     const updated = [...experiences, newExperience];
     setExperiences(updated);
     updateExperience(updated);
-    console.log("New experience added:");
   };
 
   const removeExperience = (index: number) => {

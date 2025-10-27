@@ -32,7 +32,7 @@ export default function ResumePreview() {
       
       // Get section positions
       const sections: { start: number; height: number }[] = [];
-      Array.from(hiddenResumeRef.current.children).forEach((child, index) => {
+      Array.from(hiddenResumeRef.current.children).forEach((child) => {
         const rect = child.getBoundingClientRect();
         const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
         const relativeTop = rect.top - containerRect.top;
@@ -42,7 +42,6 @@ export default function ResumePreview() {
           height: rect.height
         });
         
-        console.log(`Section ${index}: start=${relativeTop}, height=${rect.height}, end=${relativeTop + rect.height}`);
       });
       
       // Calculate page breaks that respect section boundaries
@@ -59,13 +58,10 @@ export default function ResumePreview() {
           // Section doesn't fit, start a new page at this section
           pageBreaks.push(section.start);
           currentPageStart = section.start;
-          console.log(`New page break at: ${section.start} (section was too tall for current page)`);
         }
       }
       
       setTotalPages(pageBreaks.length);
-      console.log('Page breaks:', pageBreaks);
-      
       // Render current page
       const ctx = canvasRef.current.getContext('2d');
       if (ctx) {
@@ -86,7 +82,6 @@ export default function ResumePreview() {
           const sourceHeight = Math.min(maxSourceHeight, availableCanvasHeight, fullCanvas.height - sourceY);
           const destY = isFirstPage ? 0 : topMargin;
           
-          console.log(`Page ${currentPage}: sourceY=${sourceY}, sourceHeight=${sourceHeight}, destY=${destY}`);
           
           if (sourceHeight > 0) {
             ctx.drawImage(
