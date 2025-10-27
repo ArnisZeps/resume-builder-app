@@ -22,12 +22,9 @@ export function useResumeLoader() {
       setLoadError(null);
 
       try {
-        console.log('Loading resume:', resumeId);
         const response = await getResume(resumeId);
         
         if (response.success && response.data) {
-          console.log('Resume loaded successfully:', response.data);
-          
           updateResumeData({
             personalInfo: response.data.personalInfo,
             experience: response.data.experience,
