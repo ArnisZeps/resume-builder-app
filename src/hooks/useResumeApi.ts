@@ -91,7 +91,7 @@ export function useResumeApi(): UseResumeApiReturn {
           certifications: resumeData.certifications || []
         })
       } as Record<string, unknown>;
-
+      console.log('Updating resume with data:', updateDocument);
       const response = await appwriteDatabase.updateDocument(
         COLLECTIONS.RESUMES,
         resumeId,

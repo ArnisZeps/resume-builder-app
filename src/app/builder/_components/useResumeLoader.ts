@@ -11,7 +11,7 @@ export function useResumeLoader() {
   const { updateResumeData, setSelectedTemplate } = useResumeContext();
   const [isLoadingResume, setIsLoadingResume] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  
+  const [hasLoadedResume, setHasLoadedResume] = useState(false);
   const resumeId = searchParams.get('resumeId');
 
   useEffect(() => {
@@ -26,17 +26,17 @@ export function useResumeLoader() {
         
         if (response.success && response.data) {
           updateResumeData({
-            personalInfo: response.data.personalInfo,
+            personalInfo: {
+              ...response.data.personalInfo,
+            },
             experience: response.data.experience,
             education: response.data.education,
             skills: response.data.skills,
             projects: response.data.projects,
             certifications: response.data.certifications,
           });
-
-          
-          
           setSelectedTemplate(response.data.template as TemplateType);
+          setHasLoadedResume(true);
         } else {
           const errorMsg = response.error || 'Failed to load resume';
           console.error('Failed to load resume:', errorMsg);
@@ -58,6 +58,7 @@ export function useResumeLoader() {
     resumeId, 
     isEditing: !!resumeId, 
     isLoadingResume,
-    loadError 
+    loadError,
+    hasLoadedResume
   };
 }

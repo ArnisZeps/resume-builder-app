@@ -72,7 +72,7 @@ export function ExecutiveTemplate({ resumeData }: { resumeData: ResumeData }) {
       </div>
 
       {/* Professional Summary */}
-      {resumeData.professionalSummary && (
+      {resumeData.personalInfo.professionalSummary && (
         <div style={{ marginBottom: '32px' }}>
           <h2 style={{ 
             fontSize: '16px', 
@@ -93,7 +93,7 @@ export function ExecutiveTemplate({ resumeData }: { resumeData: ResumeData }) {
             margin: 0,
             textAlign: 'justify'
           }}>
-            {resumeData.professionalSummary}
+            {resumeData.personalInfo.professionalSummary}
           </p>
         </div>
       )}

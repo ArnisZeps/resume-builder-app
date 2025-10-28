@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +15,7 @@ import CertificationsSection from "./sections/CertificationsSection";
 import { useResumeApi } from "@/hooks/useResumeApi";
 import { appwriteAuth } from "@/lib/appwrite";
 import { useResumeLoader } from "./useResumeLoader";
+import { useDebouncedFormSync } from "@/hooks/useDebouncedFormSync";
 
 const resumeFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -31,12 +32,13 @@ const resumeFormSchema = z.object({
 type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
 export default function ResumeBuilderForm() {
-  const { resumeData, updatePersonalInfo, updateProfessionalSummary, setSelectedTemplate, selectedTemplate } = useResumeContext();
+  const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate } = useResumeContext();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const { saveResume, updateResume, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const { resumeId, isEditing, isLoadingResume, loadError } = useResumeLoader();
-  const [hasLoadedResume, setHasLoadedResume] = useState(false);
+  const { resumeId, isEditing, isLoadingResume, loadError, hasLoadedResume } = useResumeLoader();
+  const [hasResetForm, setHasResetForm] = useState(false);
+
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
     defaultValues: {
@@ -48,42 +50,28 @@ export default function ResumeBuilderForm() {
       website: resumeData.personalInfo.website,
       linkedin: resumeData.personalInfo.linkedin,
       github: resumeData.personalInfo.github,
-      professionalSummary: resumeData.professionalSummary,
+      professionalSummary: resumeData.personalInfo.professionalSummary,
     },
   });
 
-  const firstName = form.watch("firstName");
-  const lastName = form.watch("lastName");
-  const email = form.watch("email");
-  const phone = form.watch("phone");
-  const location = form.watch("location");
-  const website = form.watch("website");
-  const linkedin = form.watch("linkedin");
-  const github = form.watch("github");
-  const professionalSummary = form.watch("professionalSummary");
-
-  useEffect(() => {
+  const syncFormToContext = useCallback((formData: Record<string, unknown>) => {
     updatePersonalInfo({
-      firstName: firstName || "",
-      lastName: lastName || "",
-      email: email || "",
-      phone: phone || "",
-      location: location || "",
-      website: website || "",
-      linkedin: linkedin || "",
-      github: github || "",
+      firstName: (formData.firstName as string) || "",
+      lastName: (formData.lastName as string) || "",
+      email: (formData.email as string) || "",
+      phone: (formData.phone as string) || "",
+      location: (formData.location as string) || "",
+      website: (formData.website as string) || "",
+      linkedin: (formData.linkedin as string) || "",
+      github: (formData.github as string) || "",
+      professionalSummary: (formData.professionalSummary as string) || "",
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstName, lastName, email, phone, location, website, linkedin, github]);
+  }, [updatePersonalInfo]);
+
+  useDebouncedFormSync(form.watch, syncFormToContext, 300, hasResetForm || !isEditing);
 
   useEffect(() => {
-    updateProfessionalSummary(professionalSummary || "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professionalSummary]);
-
-  // Only reset form when loading an existing resume (editing mode)
-  useEffect(() => {
-    if (isEditing && resumeId && !hasLoadedResume) {
+    if (isEditing && resumeId && hasLoadedResume && !hasResetForm) {
       form.reset({
         firstName: resumeData.personalInfo.firstName,
         lastName: resumeData.personalInfo.lastName,
@@ -93,18 +81,11 @@ export default function ResumeBuilderForm() {
         website: resumeData.personalInfo.website,
         linkedin: resumeData.personalInfo.linkedin,
         github: resumeData.personalInfo.github,
-        professionalSummary: resumeData.professionalSummary,
+        professionalSummary: resumeData.personalInfo.professionalSummary,
       });
-      setHasLoadedResume(true);
+      setHasResetForm(true);
     }
-  }, [resumeData.personalInfo, resumeData.professionalSummary, form, isEditing, resumeId, hasLoadedResume]);
-
-  // Reset flag when switching between new and edit modes
-  useEffect(() => {
-    if (!isEditing && hasLoadedResume) {
-      setHasLoadedResume(false);
-    }
-  }, [isEditing, hasLoadedResume]);
+  }, [resumeData, form, isEditing, resumeId, hasLoadedResume, hasResetForm]);
 
   const handleSaveResume = async () => {
     setSaveStatus('idle');
@@ -119,6 +100,7 @@ export default function ResumeBuilderForm() {
       let result;
       
       if (isEditing && resumeId) {
+        console.log('Updating existing resume:', resumePayload);
         result = await updateResume(resumeId, resumePayload);
       } else {
         result = await saveResume({
@@ -344,7 +326,7 @@ export default function ResumeBuilderForm() {
             {form.formState.errors.professionalSummary && (
               <p className="text-red-300 text-sm mt-1">{form.formState.errors.professionalSummary.message}</p>
             )}
-            <p className="text-white/60 text-sm mt-2">Current length: {professionalSummary?.length || 0} characters</p>
+            <p className="text-white/60 text-sm mt-2">Current length: {form.watch("professionalSummary")?.length || 0} characters</p>
           </div>
         </div>
 

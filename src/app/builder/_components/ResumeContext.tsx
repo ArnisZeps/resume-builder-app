@@ -12,8 +12,8 @@ export interface ResumeData extends Record<string, unknown>{
     website: string;
     linkedin: string;
     github: string;
+    professionalSummary: string;
   };
-  professionalSummary: string;
   experience: Array<{
     jobTitle: string;
     company: string;
@@ -80,8 +80,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       website: '',
       linkedin: '',
       github: '',
+      professionalSummary: '',
     },
-    professionalSummary: '',
     experience: [],
     education: [],
     skills: [],
@@ -103,7 +103,10 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
   const updateProfessionalSummary = useCallback((summary: string) => {
     setResumeData(prev => ({
       ...prev,
-      professionalSummary: summary
+      personalInfo: {
+        ...prev.personalInfo,
+        professionalSummary: summary
+      }
     }));
   }, []);
 
