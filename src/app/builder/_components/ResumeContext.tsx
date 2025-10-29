@@ -50,7 +50,7 @@ export interface ResumeData extends Record<string, unknown>{
   }>;
 }
 
-export type TemplateType = 'classic' | 'modern' | 'minimal' | 'executive';
+export type TemplateType = 'classic' | 'modern' | 'minimal' | 'executive' | 'compact' | 'twoColumn' | 'creative' | 'tech' | 'elegant' | 'bold';
 
 interface ResumeContextType {
   resumeData: ResumeData;
