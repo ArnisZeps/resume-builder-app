@@ -1,176 +1,122 @@
 "use client";
 
 import { useResumeContext } from './ResumeContext';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import html2canvas from 'html2canvas';
-import { templates } from './templates';
+import { useEffect, useRef, useState } from 'react';
+import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 
 export default function ResumePreview() {
   const { resumeData, selectedTemplate } = useResumeContext();
-  const hiddenResumeRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [htmlUrl, setHtmlUrl] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { generatePDF, isGenerating: isPDFGenerating, error: pdfError } = usePDFGenerator();
 
-  const generateCanvas = useCallback(async () => {
-    if (!hiddenResumeRef.current || !canvasRef.current) return;
+  useEffect(() => {
+    const updatePreview = () => {
+      setIsLoading(true);
+      
+      // Create new URL for the resume page
+      const resumeDataParam = encodeURIComponent(JSON.stringify(resumeData));
+      const newUrl = `/resume-html?data=${resumeDataParam}&template=${selectedTemplate}`;
+      
+      setHtmlUrl(newUrl);
+      setIsLoading(false);
+    };
 
-    setIsGenerating(true);
-    try {
-      // Capture full content first
-      const fullCanvas = await html2canvas(hiddenResumeRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: hiddenResumeRef.current.scrollHeight,
-      });
-
-      const pageHeight = 1123; // Display units
-      const topMargin = 60; // Display units
-      
-      // Get section positions
-      const sections: { start: number; height: number }[] = [];
-      Array.from(hiddenResumeRef.current.children).forEach((child) => {
-        const rect = child.getBoundingClientRect();
-        const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
-        const relativeTop = rect.top - containerRect.top;
-        
-        sections.push({
-          start: relativeTop,
-          height: rect.height
-        });
-        
-      });
-      
-      // Calculate page breaks that respect section boundaries
-      const pageBreaks: number[] = [0];
-      let currentPageStart = 0;
-      
-      for (const section of sections) {
-        const sectionEnd = section.start + section.height;
-        const isFirstPage = pageBreaks.length === 1;
-        const availableHeight = isFirstPage ? pageHeight : pageHeight - topMargin;
-        
-        // Check if the entire section fits on current page
-        if (sectionEnd - currentPageStart > availableHeight) {
-          // Section doesn't fit, start a new page at this section
-          pageBreaks.push(section.start);
-          currentPageStart = section.start;
-        }
-      }
-      
-      setTotalPages(pageBreaks.length);
-      // Render current page
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        canvasRef.current.width = 794;
-        canvasRef.current.height = 1123;
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 794, 1123);
-        
-        if (currentPage <= pageBreaks.length) {
-          const pageStartY = pageBreaks[currentPage - 1];
-          const nextPageStartY = pageBreaks[currentPage] || (fullCanvas.height / 2);
-          const isFirstPage = currentPage === 1;
-          
-          const sourceY = pageStartY * 2; // Scale for canvas
-          const maxSourceHeight = (nextPageStartY - pageStartY) * 2;
-          const availableCanvasHeight = isFirstPage ? pageHeight * 2 : (pageHeight - topMargin) * 2;
-          const sourceHeight = Math.min(maxSourceHeight, availableCanvasHeight, fullCanvas.height - sourceY);
-          const destY = isFirstPage ? 0 : topMargin;
-          
-          
-          if (sourceHeight > 0) {
-            ctx.drawImage(
-              fullCanvas,
-              0, sourceY,
-              794 * 2, sourceHeight,
-              0, destY,
-              794, sourceHeight / 2
-            );
-          }
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error generating canvas:', error);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [currentPage]);  useEffect(() => {
     const timeoutId = setTimeout(() => {
-      generateCanvas();
-    }, 300); 
+      updatePreview();
+    }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [resumeData, selectedTemplate, currentPage, generateCanvas]);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [resumeData, selectedTemplate]);
 
-  const SelectedTemplate = templates[selectedTemplate];
+  const handleDownloadPDF = async () => {
+    const success = await generatePDF(resumeData, selectedTemplate, {
+      filename: `${resumeData.personalInfo.firstName}_${resumeData.personalInfo.lastName}_Resume.pdf`,
+      format: 'A4',
+      margin: {
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.5in',
+        left: '0.5in'
+      },
+      scale: 0.8
+    });
+    
+    if (!success && pdfError) {
+      alert(`Failed to generate PDF: ${pdfError}`);
+    }
+  };
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div
-          ref={hiddenResumeRef}
-          className="absolute -left-[9999px] top-0 bg-white"
-          style={{
-            width: '794px',
-            height: 'auto',
-            minHeight: '1123px',
-            padding: '60px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            overflow: 'visible'
-          }}
-        >
-          <SelectedTemplate resumeData={resumeData} />
+      {/* PDF Download Button */}
+      <div className="flex-shrink-0 p-4 border-b border-white/20">
+        <div className="flex items-center justify-center">
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isPDFGenerating}
+            className={`px-6 py-2 rounded-lg font-medium text-sm transition-all ${
+              isPDFGenerating
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            {isPDFGenerating ? 'Generating PDF...' : 'Download PDF'}
+          </button>
         </div>
-
-        <div className="relative w-full h-full flex items-center justify-center">
-          {isGenerating && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-10">
-              <div className="text-gray-600">Generating preview...</div>
+        {pdfError && (
+          <div className="mt-2 text-center text-red-400 text-sm">
+            Error: {pdfError}
+          </div>
+        )}
+      </div>
+      
+      {/* Preview Area */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full h-full max-w-4xl relative">
+          {isLoading && (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-white/70">Loading preview...</div>
             </div>
           )}
           
-          <canvas
-            ref={canvasRef}
-            className="max-w-full max-h-[calc(100vh-200px)] shadow-2xl"
-            style={{
-              aspectRatio: '794/1123', 
-              backgroundColor: 'white',
-            }}
-          />
+          {htmlUrl && !isLoading && (
+            <div 
+              className="relative w-full h-full select-none"
+              onContextMenu={(e) => e.preventDefault()}
+              onDragStart={(e) => e.preventDefault()}
+            >
+              <iframe
+                ref={iframeRef}
+                src={htmlUrl}
+                className="w-full h-full border-0 shadow-2xl pointer-events-auto"
+                style={{
+                  aspectRatio: '794/1123',
+                  maxHeight: 'calc(100vh - 200px)',
+                  backgroundColor: 'white',
+                }}
+                title="Resume Preview"
+                sandbox="allow-same-origin"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              {/* Invisible overlay to prevent right-click on iframe border */}
+              <div 
+                className="absolute inset-0 pointer-events-none"
+                style={{ zIndex: 1 }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            </div>
+          )}
         </div>
       </div>
       
+      {/* Info */}
       <div className="flex-shrink-0 flex items-center justify-center p-4 border-t border-white/20">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage <= 1}
-            className={`px-3 py-1 border border-white/20 rounded text-white text-sm transition-all ${
-              currentPage <= 1 
-                ? 'bg-white/10 opacity-50 cursor-not-allowed' 
-                : 'bg-white/20 hover:bg-white/30 cursor-pointer'
-            }`}
-          >
-            ← Previous
-          </button>
-          <span className="text-white/70 text-sm">Page {currentPage} of {totalPages}</span>
-          <button 
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage >= totalPages}
-            className={`px-3 py-1 border border-white/20 rounded text-white text-sm transition-all ${
-              currentPage >= totalPages 
-                ? 'bg-white/10 opacity-50 cursor-not-allowed' 
-                : 'bg-white/20 hover:bg-white/30 cursor-pointer'
-            }`}
-          >
-            Next →
-          </button>
+        <div className="text-white/70 text-sm text-center">
+          Live preview • Click &quot;Download PDF&quot; for perfect formatting
         </div>
       </div>
     </div>
