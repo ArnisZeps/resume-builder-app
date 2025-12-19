@@ -375,28 +375,41 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
       {/* Preview Area */}
       <div 
         ref={containerRef}
-        className="flex-1 flex items-center justify-center p-4"
+        className="flex-1 overflow-auto p-4"
       >
-        <div
-          style={{
-            transform: `scale(${scale})`,
-            transformOrigin: 'center',
-            transition: 'transform 0.2s ease-out',
-          }}
-        >
+        <div className="min-h-full flex justify-center items-start md:items-center">
+          {/*
+            NOTE: CSS transforms don't affect layout size. We wrap the scaled page in a box
+            that uses the scaled dimensions so layouts don't center/clamp the unscaled A4 height.
+          */}
           <div
-            className="shadow-2xl"
             style={{
-              width: `${A4_WIDTH}px`,
-              height: `${A4_HEIGHT}px`,
-              backgroundColor: 'white',
-              padding: `${PADDING}px`,
-              boxSizing: 'border-box',
-              overflow: 'hidden',
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              width: `${A4_WIDTH * scale}px`,
+              height: `${A4_HEIGHT * scale}px`,
             }}
-            dangerouslySetInnerHTML={{ __html: currentPageContent }}
-          />
+          >
+            <div
+              style={{
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                transition: 'transform 0.2s ease-out',
+              }}
+            >
+              <div
+                className="shadow-2xl"
+                style={{
+                  width: `${A4_WIDTH}px`,
+                  height: `${A4_HEIGHT}px`,
+                  backgroundColor: 'white',
+                  padding: `${PADDING}px`,
+                  boxSizing: 'border-box',
+                  overflow: 'hidden',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+                dangerouslySetInnerHTML={{ __html: currentPageContent }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
