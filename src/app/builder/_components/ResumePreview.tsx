@@ -375,7 +375,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
       {/* Preview Area */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto p-4"
+        className="flex-1 overflow-auto scrollbar-none p-4"
       >
         <div className="min-h-full flex justify-center items-start md:items-center">
           {/*

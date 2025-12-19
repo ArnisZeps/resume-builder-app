@@ -20,7 +20,7 @@ export default function ResumeBuilderPage() {
           <Header />
 
           <div className="hidden xl:flex h-[calc(100vh-72px)]">
-            <div className="w-1/2 overflow-y-auto border-r border-white/20">
+            <div className="w-1/2 overflow-y-auto scrollbar-none border-r border-white/20">
               <ResumeBuilderForm />
             </div>
 
@@ -68,7 +68,7 @@ export default function ResumeBuilderPage() {
           </div>
 
           <div className="xl:hidden h-[calc(100vh-72px)] relative">
-            <div className={`${showPreview ? "hidden" : "block"} h-full overflow-y-auto`}>
+            <div className={`${showPreview ? "hidden" : "block"} h-full overflow-y-auto scrollbar-none`}>
               <ResumeBuilderForm />
             </div>
 
