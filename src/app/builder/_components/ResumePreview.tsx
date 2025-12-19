@@ -1,177 +1,278 @@
 "use client";
 
 import { useResumeContext } from './ResumeContext';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import html2canvas from 'html2canvas';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { templates } from './templates';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 export default function ResumePreview() {
   const { resumeData, selectedTemplate } = useResumeContext();
-  const hiddenResumeRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pages, setPages] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const generateCanvas = useCallback(async () => {
-    if (!hiddenResumeRef.current || !canvasRef.current) return;
+  // A4 dimensions in pixels at 96 DPI
+  const A4_WIDTH = 794;
+  const A4_HEIGHT = 1123;
+  const PADDING = 60;
+  const CONTENT_HEIGHT = A4_HEIGHT - (PADDING * 2);
 
-    setIsGenerating(true);
+  // Calculate scale to fit container width
+  useEffect(() => {
+    const updateScale = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth;
+        const scaleX = Math.min((containerWidth - 40) / A4_WIDTH, 1);
+        setScale(scaleX);
+      }
+    };
+
+    updateScale();
+    const resizeObserver = new ResizeObserver(updateScale);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Intelligent pagination: measure content and split into pages
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    const timer = setTimeout(() => {
+      const elements = Array.from(contentRef.current!.children) as HTMLElement[];
+      const pageContents: string[] = [];
+      let currentPageContent: HTMLElement[] = [];
+      let currentHeight = 0;
+
+      elements.forEach((element) => {
+        const elementHeight = element.offsetHeight;
+        
+        // If adding this element exceeds page height, start new page
+        if (currentHeight + elementHeight > CONTENT_HEIGHT && currentPageContent.length > 0) {
+          // Save current page
+          pageContents.push(
+            currentPageContent.map(el => el.outerHTML).join('')
+          );
+          
+          // Start new page with current element
+          currentPageContent = [element];
+          currentHeight = elementHeight;
+        } else {
+          // Add to current page
+          currentPageContent.push(element);
+          currentHeight += elementHeight;
+        }
+      });
+
+      // Add last page if it has content
+      if (currentPageContent.length > 0) {
+        pageContents.push(
+          currentPageContent.map(el => el.outerHTML).join('')
+        );
+      }
+
+      setPages(pageContents.length > 0 ? pageContents : ['']);
+      setTotalPages(Math.max(pageContents.length, 1));
+      
+      // Reset to page 1 if current page is out of bounds
+      if (currentPage > pageContents.length) {
+        setCurrentPage(1);
+      }
+    }, 100); // Debounce to avoid excessive recalculation
+
+    return () => clearTimeout(timer);
+  }, [resumeData, selectedTemplate, CONTENT_HEIGHT]);
+
+  const handleDownload = () => {
+    setIsDownloading(true);
+    
     try {
-      // Capture full content first
-      const fullCanvas = await html2canvas(hiddenResumeRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        width: 794,
-        height: hiddenResumeRef.current.scrollHeight,
-      });
-
-      const pageHeight = 1123; // Display units
-      const topMargin = 60; // Display units
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'absolute';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
       
-      // Get section positions
-      const sections: { start: number; height: number }[] = [];
-      Array.from(hiddenResumeRef.current.children).forEach((child) => {
-        const rect = child.getBoundingClientRect();
-        const containerRect = hiddenResumeRef.current!.getBoundingClientRect();
-        const relativeTop = rect.top - containerRect.top;
-        
-        sections.push({
-          start: relativeTop,
-          height: rect.height
-        });
-        
-      });
+      const iframeDoc = iframe.contentWindow?.document;
+      if (!iframeDoc) return;
       
-      // Calculate page breaks that respect section boundaries
-      const pageBreaks: number[] = [0];
-      let currentPageStart = 0;
+      const allPagesContent = pages.map((pageContent, index) => `
+        <div class="resume-page" style="page-break-after: ${index < pages.length - 1 ? 'always' : 'auto'};">
+          ${pageContent}
+        </div>
+      `).join('');
       
-      for (const section of sections) {
-        const sectionEnd = section.start + section.height;
-        const isFirstPage = pageBreaks.length === 1;
-        const availableHeight = isFirstPage ? pageHeight : pageHeight - topMargin;
-        
-        // Check if the entire section fits on current page
-        if (sectionEnd - currentPageStart > availableHeight) {
-          // Section doesn't fit, start a new page at this section
-          pageBreaks.push(section.start);
-          currentPageStart = section.start;
-        }
-      }
+      const firstName = resumeData.personalInfo.firstName || 'Resume';
+      const lastName = resumeData.personalInfo.lastName || '';
       
-      setTotalPages(pageBreaks.length);
-      // Render current page
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        canvasRef.current.width = 794;
-        canvasRef.current.height = 1123;
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, 794, 1123);
-        
-        if (currentPage <= pageBreaks.length) {
-          const pageStartY = pageBreaks[currentPage - 1];
-          const nextPageStartY = pageBreaks[currentPage] || (fullCanvas.height / 2);
-          const isFirstPage = currentPage === 1;
-          
-          const sourceY = pageStartY * 2; // Scale for canvas
-          const maxSourceHeight = (nextPageStartY - pageStartY) * 2;
-          const availableCanvasHeight = isFirstPage ? pageHeight * 2 : (pageHeight - topMargin) * 2;
-          const sourceHeight = Math.min(maxSourceHeight, availableCanvasHeight, fullCanvas.height - sourceY);
-          const destY = isFirstPage ? 0 : topMargin;
-          
-          
-          if (sourceHeight > 0) {
-            ctx.drawImage(
-              fullCanvas,
-              0, sourceY,
-              794 * 2, sourceHeight,
-              0, destY,
-              794, sourceHeight / 2
-            );
-          }
-        }
-      }
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>${firstName}_${lastName}_Resume</title>
+            <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+              
+              body {
+                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              
+              .resume-page {
+                width: 794px;
+                height: 1123px;
+                padding: 60px;
+                margin: 0 auto;
+                background: white;
+                position: relative;
+              }
+              
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              
+              @media print {
+                body {
+                  margin: 0;
+                  padding: 0;
+                }
+                
+                .resume-page {
+                  width: 100%;
+                  height: 100vh;
+                  margin: 0;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            ${allPagesContent}
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+      
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          setIsDownloading(false);
+        }, 100);
+      }, 250);
       
     } catch (error) {
-      console.error('Error generating canvas:', error);
-    } finally {
-      setIsGenerating(false);
+      console.error('Error downloading PDF:', error);
+      setIsDownloading(false);
     }
-  }, [currentPage]);  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      generateCanvas();
-    }, 300); 
-
-    return () => clearTimeout(timeoutId);
-  }, [resumeData, selectedTemplate, currentPage, generateCanvas]);
+  };
 
   const SelectedTemplate = templates[selectedTemplate];
 
   return (
     <div className="w-full h-full flex flex-col">
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div
-          ref={hiddenResumeRef}
-          className="absolute -left-[9999px] top-0 bg-white"
-          style={{
-            width: '794px',
-            height: 'auto',
-            minHeight: '1123px',
-            padding: '60px',
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            overflow: 'visible'
-          }}
-        >
+      {/* Hidden content for measurement */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '-9999px',
+          width: `${A4_WIDTH - (PADDING * 2)}px`,
+        }}
+      >
+        <div ref={contentRef}>
           <SelectedTemplate resumeData={resumeData} />
         </div>
+      </div>
 
-        <div className="relative w-full h-full flex items-center justify-center">
-          {isGenerating && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75 z-10">
-              <div className="text-gray-600">Generating preview...</div>
-            </div>
-          )}
-          
-          <canvas
-            ref={canvasRef}
-            className="max-w-full max-h-[calc(100vh-200px)] shadow-2xl"
+      {/* Download Button */}
+      <div className="flex-shrink-0 p-4 border-b border-white/20">
+        <button
+          onClick={handleDownload}
+          disabled={isDownloading}
+          className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+            isDownloading
+              ? 'bg-gray-600 cursor-not-allowed text-gray-400'
+              : 'bg-yellow-400 hover:bg-yellow-300 text-violet-900 hover:shadow-lg'
+          }`}
+        >
+          <ArrowDownTrayIcon className="w-5 h-5" />
+          {isDownloading ? 'Preparing PDF...' : 'Download as PDF'}
+        </button>
+      </div>
+
+      {/* Preview Area */}
+      <div 
+        ref={containerRef}
+        className="flex-1 flex items-center justify-center p-4"
+      >
+        <div
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'center',
+            transition: 'transform 0.2s ease-out',
+          }}
+        >
+          {/* A4 Page */}
+          <div
+            className="shadow-2xl"
             style={{
-              aspectRatio: '794/1123', 
+              width: `${A4_WIDTH}px`,
+              height: `${A4_HEIGHT}px`,
               backgroundColor: 'white',
+              padding: `${PADDING}px`,
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
+            dangerouslySetInnerHTML={{ __html: pages[currentPage - 1] || '' }}
           />
         </div>
       </div>
-      
-      <div className="flex-shrink-0 flex items-center justify-center p-4 border-t border-white/20">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            disabled={currentPage <= 1}
-            className={`px-3 py-1 border border-white/20 rounded text-white text-sm transition-all ${
-              currentPage <= 1 
-                ? 'bg-white/10 opacity-50 cursor-not-allowed' 
-                : 'bg-white/20 hover:bg-white/30 cursor-pointer'
-            }`}
-          >
-            ← Previous
-          </button>
-          <span className="text-white/70 text-sm">Page {currentPage} of {totalPages}</span>
-          <button 
-            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            disabled={currentPage >= totalPages}
-            className={`px-3 py-1 border border-white/20 rounded text-white text-sm transition-all ${
-              currentPage >= totalPages 
-                ? 'bg-white/10 opacity-50 cursor-not-allowed' 
-                : 'bg-white/20 hover:bg-white/30 cursor-pointer'
-            }`}
-          >
-            Next →
-          </button>
-        </div>
+
+      {/* Pagination Controls */}
+      <div className="flex-shrink-0 flex items-center justify-center gap-4 p-4 border-t border-white/20">
+        <button
+          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          disabled={currentPage <= 1}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            currentPage <= 1
+              ? 'bg-white/10 text-white/30 cursor-not-allowed'
+              : 'bg-white/20 text-white hover:bg-white/30'
+          }`}
+        >
+          ← Previous
+        </button>
+        
+        <span className="text-white/80 font-medium">
+          Page {currentPage} of {totalPages}
+        </span>
+        
+        <button
+          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+          disabled={currentPage >= totalPages}
+          className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            currentPage >= totalPages
+              ? 'bg-white/10 text-white/30 cursor-not-allowed'
+              : 'bg-white/20 text-white hover:bg-white/30'
+          }`}
+        >
+          Next →
+        </button>
       </div>
     </div>
   );
