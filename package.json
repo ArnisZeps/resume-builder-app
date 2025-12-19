@@ -15,7 +15,7 @@
     "@types/react-datepicker": "^7.0.0",
     "appwrite": "^18.1.1",
     "html2canvas": "^1.4.1",
-    "next": "15.3.4",
+    "next": "15.3.8",
     "node-appwrite": "^17.2.0",
     "react": "^19.0.0",
     "react-datepicker": "^8.4.0",
