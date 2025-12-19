@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import puppeteer from 'puppeteer';
+import chromium from '@sparticuz/chromium';
+import puppeteer from 'puppeteer-core';
 
 export const runtime = 'nodejs';
 
@@ -105,9 +106,12 @@ export async function POST(req: NextRequest) {
   const title = typeof body.title === 'string' && body.title.trim().length > 0 ? body.title.trim() : 'Resume';
 
   try {
+    const executablePath = await chromium.executablePath();
+
     const browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath,
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
     try {
