@@ -21,13 +21,20 @@ export default function ResumePreview() {
   const PADDING = 60;
   const CONTENT_HEIGHT = A4_HEIGHT - (PADDING * 2);
 
-  // Calculate scale to fit container width
+  // Calculate scale to fit container width AND height
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        const scaleX = Math.min((containerWidth - 40) / A4_WIDTH, 1);
-        setScale(scaleX);
+        const containerHeight = containerRef.current.clientHeight;
+        
+        // Calculate scale based on both dimensions with padding
+        const scaleX = (containerWidth - 40) / A4_WIDTH;
+        const scaleY = (containerHeight - 40) / A4_HEIGHT;
+        
+        // Use the smaller scale to ensure it fits both dimensions
+        const newScale = Math.min(scaleX, scaleY, 1);
+        setScale(newScale);
       }
     };
 
@@ -218,18 +225,18 @@ export default function ResumePreview() {
       {/* Preview Area */}
       <div 
         ref={containerRef}
-        className="flex-1 flex items-center justify-center p-4"
+        className="flex-1 flex items-center justify-center p-4 overflow-hidden"
       >
         <div
           style={{
-            transform: `scale(${scale})`,
-            transformOrigin: 'center',
-            transition: 'transform 0.2s ease-out',
+            width: `${A4_WIDTH * scale}px`,
+            height: `${A4_HEIGHT * scale}px`,
+            transition: 'all 0.2s ease-out',
           }}
         >
           {/* A4 Page */}
           <div
-            className="shadow-2xl"
+            className="shadow-2xl origin-top-left"
             style={{
               width: `${A4_WIDTH}px`,
               height: `${A4_HEIGHT}px`,
@@ -238,6 +245,8 @@ export default function ResumePreview() {
               boxSizing: 'border-box',
               overflow: 'hidden',
               fontFamily: 'system-ui, -apple-system, sans-serif',
+              transform: `scale(${scale})`,
+              transformOrigin: 'top left',
             }}
             dangerouslySetInnerHTML={{ __html: pages[currentPage - 1] || '' }}
           />
