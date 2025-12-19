@@ -339,17 +339,19 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
   const currentPageContent = pages[currentPage - 1] || '';
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-full flex flex-col relative">
       <div
         style={{
-          position: 'absolute',
-          left: '-9999px',
+          position: 'fixed',
+          left: '-10000px',
           top: 0,
           width: `${A4_WIDTH}px`,
           padding: `${PADDING}px`,
           boxSizing: 'border-box',
           fontFamily: 'system-ui, -apple-system, sans-serif',
           backgroundColor: 'white',
+          opacity: 0,
+          pointerEvents: 'none',
         }}
       >
         <div ref={contentRef}>
@@ -377,7 +379,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
       {/* Preview Area */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-auto scrollbar-none p-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-none p-4"
       >
         <div className="min-h-full flex justify-center items-start md:items-center">
           {/*

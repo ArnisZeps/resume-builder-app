@@ -5,7 +5,7 @@ import DashboardGuard from "../dashboard/_components/DashboardGuard";
 import ResumeBuilderForm from "./_components/ResumeBuilderForm";
 import ResumePreview from "./_components/ResumePreview";
 import { ResumeProvider, useResumeContext } from "./_components/ResumeContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ResumeBuilderPage() {
@@ -70,6 +70,24 @@ function ResumeBuilderInner() {
   };
 
   const downloadDisabled = isDownloading || pagesForExport.length === 0;
+
+  useEffect(() => {
+    if (!showPreview) return;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevOverflowX = document.body.style.overflowX;
+    const prevOverflowY = document.body.style.overflowY;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.overflowX = 'hidden';
+    document.body.style.overflowY = 'hidden';
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overflowX = prevOverflowX;
+      document.body.style.overflowY = prevOverflowY;
+    };
+  }, [showPreview]);
 
   return (
     <div className="h-screen bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 overflow-hidden">
@@ -142,7 +160,7 @@ function ResumeBuilderInner() {
         </div>
 
         {showPreview && (
-          <div className="fixed inset-0 top-[72px] bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 z-40">
+          <div className="fixed inset-0 top-[72px] bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 z-40 overflow-hidden overscroll-none">
             <div className="p-4 h-full relative">
               <ResumePreview
                 currentPage={currentPage}
