@@ -8,9 +8,10 @@ interface ResumePreviewProps {
   currentPage?: number;
   onCurrentPageChange?: (page: number) => void;
   onTotalPagesChange?: (total: number) => void;
+  onPagesChange?: (pages: string[]) => void;
 }
 
-export default function ResumePreview({ currentPage: controlledCurrentPage, onCurrentPageChange, onTotalPagesChange }: ResumePreviewProps = {}) {
+export default function ResumePreview({ currentPage: controlledCurrentPage, onCurrentPageChange, onTotalPagesChange, onPagesChange }: ResumePreviewProps = {}) {
   const { resumeData, selectedTemplate } = useResumeContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -141,7 +142,6 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     return fragments.length > 0 ? fragments : [element.outerHTML];
   }, [getOuterHeight]);
 
-  // Intelligent pagination: measure content and split into pages
   useEffect(() => {
     if (!contentRef.current) return;
 
@@ -224,6 +224,9 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
 
       const nextPages = pageContents.length > 0 ? pageContents : [''];
       setPages(nextPages);
+      if (onPagesChange) {
+        onPagesChange(nextPages);
+      }
 
       const nextTotalPages = Math.max(nextPages.length, 1);
       if (onTotalPagesChange) {
@@ -236,7 +239,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     }, 100); // Debounce to avoid excessive recalculation
 
     return () => clearTimeout(timer);
-  }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
+  }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
 
   // const handleDownload = () => {
   //   setIsDownloading(true);
@@ -337,7 +340,6 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
 
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Hidden content for measurement */}
       <div
         style={{
           position: 'absolute',
