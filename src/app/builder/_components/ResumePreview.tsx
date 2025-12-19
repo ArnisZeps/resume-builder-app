@@ -1,19 +1,22 @@
 "use client";
 
 import { useResumeContext } from './ResumeContext';
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { templates } from './templates';
-import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
-export default function ResumePreview() {
+interface ResumePreviewProps {
+  currentPage?: number;
+  onCurrentPageChange?: (page: number) => void;
+  onTotalPagesChange?: (total: number) => void;
+}
+
+export default function ResumePreview({ currentPage: controlledCurrentPage, onCurrentPageChange, onTotalPagesChange }: ResumePreviewProps = {}) {
   const { resumeData, selectedTemplate } = useResumeContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const fragmentMeasureRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [pages, setPages] = useState<string[]>([]);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [pages, setPages] = useState<string[]>(['']);
 
   // A4 dimensions in pixels at 96 DPI
   const A4_WIDTH = 794;
@@ -40,6 +43,104 @@ export default function ResumePreview() {
     return () => resizeObserver.disconnect();
   }, []);
 
+  const [uncontrolledCurrentPage, setUncontrolledCurrentPage] = useState(1);
+  const currentPage = controlledCurrentPage ?? uncontrolledCurrentPage;
+  const setCurrentPage = useCallback((nextPage: number) => {
+    if (onCurrentPageChange) {
+      onCurrentPageChange(nextPage);
+      return;
+    }
+    setUncontrolledCurrentPage(nextPage);
+  }, [onCurrentPageChange]);
+
+  const getOuterHeight = useCallback((element: HTMLElement) => {
+    const style = window.getComputedStyle(element);
+    const marginTop = Number.parseFloat(style.marginTop || '0') || 0;
+    const marginBottom = Number.parseFloat(style.marginBottom || '0') || 0;
+    const rectHeight = element.getBoundingClientRect().height;
+    return rectHeight + marginTop + marginBottom;
+  }, []);
+
+  const measureHtmlFragmentHeight = useCallback((html: string) => {
+    const host = fragmentMeasureRef.current;
+    if (!host) return 0;
+    host.innerHTML = html;
+    const el = host.firstElementChild as HTMLElement | null;
+    if (!el) {
+      host.innerHTML = '';
+      return 0;
+    }
+    const height = getOuterHeight(el);
+    host.innerHTML = '';
+    return height;
+  }, [getOuterHeight]);
+
+  const splitElementByChildren = useCallback((element: HTMLElement, maxHeight: number, maxDepth = 3): string[] => {
+    const style = window.getComputedStyle(element);
+    const paddingTop = Number.parseFloat(style.paddingTop || '0') || 0;
+    const paddingBottom = Number.parseFloat(style.paddingBottom || '0') || 0;
+    const borderTop = Number.parseFloat(style.borderTopWidth || '0') || 0;
+    const borderBottom = Number.parseFloat(style.borderBottomWidth || '0') || 0;
+    const marginTop = Number.parseFloat(style.marginTop || '0') || 0;
+    const marginBottom = Number.parseFloat(style.marginBottom || '0') || 0;
+    const baseOuter = paddingTop + paddingBottom + borderTop + borderBottom + marginTop + marginBottom;
+
+    const availableForChildren = Math.max(0, maxHeight - baseOuter);
+    const children = Array.from(element.children) as HTMLElement[];
+    if (children.length === 0 || availableForChildren <= 0 || maxDepth <= 0) {
+      return [element.outerHTML];
+    }
+
+    const fragments: string[] = [];
+    let currentFragmentChildren: HTMLElement[] = [];
+    let currentHeight = 0;
+
+    const flush = () => {
+      const wrapper = element.cloneNode(false) as HTMLElement;
+      for (const child of currentFragmentChildren) {
+        wrapper.appendChild(child.cloneNode(true));
+      }
+      fragments.push(wrapper.outerHTML);
+    };
+
+    for (const child of children) {
+      const childHeight = getOuterHeight(child);
+
+      // If child itself is too tall for the available space, recursively split it.
+      if (childHeight > availableForChildren) {
+        if (currentFragmentChildren.length > 0) {
+          flush();
+          currentFragmentChildren = [];
+          currentHeight = 0;
+        }
+
+        const childFragments = splitElementByChildren(child, availableForChildren, maxDepth - 1);
+        for (const frag of childFragments) {
+          const wrapper = element.cloneNode(false) as HTMLElement;
+          wrapper.innerHTML = frag;
+          fragments.push(wrapper.outerHTML);
+        }
+
+        continue;
+      }
+
+      if (currentFragmentChildren.length > 0 && currentHeight + childHeight > availableForChildren) {
+        flush();
+        currentFragmentChildren = [];
+        currentHeight = 0;
+      }
+
+      currentFragmentChildren.push(child);
+      currentHeight += childHeight;
+    }
+
+    if (currentFragmentChildren.length > 0) {
+      flush();
+    }
+
+    return fragments.length > 0 ? fragments : [element.outerHTML];
+  }, [getOuterHeight]);
+
   // Intelligent pagination: measure content and split into pages
   useEffect(() => {
     if (!contentRef.current) return;
@@ -47,47 +148,95 @@ export default function ResumePreview() {
     const timer = setTimeout(() => {
       const elements = Array.from(contentRef.current!.children) as HTMLElement[];
       const pageContents: string[] = [];
-      let currentPageContent: HTMLElement[] = [];
+      let currentPageContent: string[] = [];
       let currentHeight = 0;
 
-      elements.forEach((element) => {
-        const elementHeight = element.offsetHeight;
-        
-        // If adding this element exceeds page height, start new page
-        if (currentHeight + elementHeight > CONTENT_HEIGHT && currentPageContent.length > 0) {
-          // Save current page
-          pageContents.push(
-            currentPageContent.map(el => el.outerHTML).join('')
-          );
-          
-          // Start new page with current element
-          currentPageContent = [element];
-          currentHeight = elementHeight;
-        } else {
-          // Add to current page
-          currentPageContent.push(element);
-          currentHeight += elementHeight;
-        }
-      });
+      const flushPage = () => {
+        if (currentPageContent.length === 0) return;
+        pageContents.push(currentPageContent.join(''));
+        currentPageContent = [];
+        currentHeight = 0;
+      };
 
-      // Add last page if it has content
-      if (currentPageContent.length > 0) {
-        pageContents.push(
-          currentPageContent.map(el => el.outerHTML).join('')
-        );
+      for (const element of elements) {
+        const elementHeight = getOuterHeight(element);
+        const remainingHeight = CONTENT_HEIGHT - currentHeight;
+
+        // Fits in current page
+        if (elementHeight <= remainingHeight) {
+          currentPageContent.push(element.outerHTML);
+          currentHeight += elementHeight;
+          continue;
+        }
+
+        // Doesn't fit in remaining space: try splitting it to fill the current page.
+        if (currentPageContent.length > 0 && remainingHeight > 48) {
+          const fillFragments = splitElementByChildren(element, remainingHeight);
+          const didSplit = fillFragments.length > 1 || fillFragments[0] !== element.outerHTML;
+
+          if (didSplit) {
+            // Put the first fragment on the current page, then continue packing the rest.
+            currentPageContent.push(fillFragments[0]);
+            flushPage();
+
+            for (const frag of fillFragments.slice(1)) {
+              const fragHeight = measureHtmlFragmentHeight(frag);
+
+              if (currentPageContent.length > 0 && currentHeight + fragHeight > CONTENT_HEIGHT) {
+                flushPage();
+              }
+
+              currentPageContent.push(frag);
+              currentHeight += fragHeight;
+            }
+
+            continue;
+          }
+        }
+
+        // Doesn't fit: close current page if it has content
+        if (currentPageContent.length > 0) {
+          flushPage();
+        }
+
+        // Now we're at the top of a new page
+        if (elementHeight <= CONTENT_HEIGHT) {
+          currentPageContent.push(element.outerHTML);
+          currentHeight += elementHeight;
+          continue;
+        }
+
+        // Element itself is taller than a page: split by its direct children into multiple page fragments.
+        const fragments = splitElementByChildren(element, CONTENT_HEIGHT);
+        for (const frag of fragments) {
+          const fragHeight = measureHtmlFragmentHeight(frag);
+
+          if (currentPageContent.length > 0 && currentHeight + fragHeight > CONTENT_HEIGHT) {
+            flushPage();
+          }
+
+          currentPageContent.push(frag);
+          currentHeight += fragHeight;
+        }
       }
 
-      setPages(pageContents.length > 0 ? pageContents : ['']);
-      setTotalPages(Math.max(pageContents.length, 1));
-      
-      // Reset to page 1 if current page is out of bounds
-      if (currentPage > pageContents.length) {
+      flushPage();
+
+      const nextPages = pageContents.length > 0 ? pageContents : [''];
+      setPages(nextPages);
+
+      const nextTotalPages = Math.max(nextPages.length, 1);
+      if (onTotalPagesChange) {
+        onTotalPagesChange(nextTotalPages);
+      }
+
+      if (currentPage > nextTotalPages) {
         setCurrentPage(1);
       }
     }, 100); // Debounce to avoid excessive recalculation
 
     return () => clearTimeout(timer);
-  }, [resumeData, selectedTemplate, CONTENT_HEIGHT]);
+  }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
 
   // const handleDownload = () => {
   //   setIsDownloading(true);
@@ -184,6 +333,8 @@ export default function ResumePreview() {
 
   const SelectedTemplate = templates[selectedTemplate];
 
+  const currentPageContent = pages[currentPage - 1] || '';
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Hidden content for measurement */}
@@ -191,12 +342,18 @@ export default function ResumePreview() {
         style={{
           position: 'absolute',
           left: '-9999px',
-          width: `${A4_WIDTH - (PADDING * 2)}px`,
+          top: 0,
+          width: `${A4_WIDTH}px`,
+          padding: `${PADDING}px`,
+          boxSizing: 'border-box',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          backgroundColor: 'white',
         }}
       >
         <div ref={contentRef}>
           <SelectedTemplate resumeData={resumeData} />
         </div>
+        <div ref={fragmentMeasureRef} />
       </div>
 
       {/* Download Button */}
@@ -238,40 +395,9 @@ export default function ResumePreview() {
               overflow: 'hidden',
               fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
-            dangerouslySetInnerHTML={{ __html: pages[currentPage - 1] || '' }}
+            dangerouslySetInnerHTML={{ __html: currentPageContent }}
           />
         </div>
-      </div>
-
-      {/* Pagination Controls */}
-      <div className="flex-shrink-0 flex items-center justify-center gap-4 p-4 border-t border-white/20">
-        <button
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage <= 1}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            currentPage <= 1
-              ? 'bg-white/10 text-white/30 cursor-not-allowed'
-              : 'bg-white/20 text-white hover:bg-white/30'
-          }`}
-        >
-          ← Previous
-        </button>
-        
-        <span className="text-white/80 font-medium">
-          Page {currentPage} of {totalPages}
-        </span>
-        
-        <button
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage >= totalPages}
-          className={`px-4 py-2 rounded-lg font-medium transition-all ${
-            currentPage >= totalPages
-              ? 'bg-white/10 text-white/30 cursor-not-allowed'
-              : 'bg-white/20 text-white hover:bg-white/30'
-          }`}
-        >
-          Next →
-        </button>
       </div>
     </div>
   );
