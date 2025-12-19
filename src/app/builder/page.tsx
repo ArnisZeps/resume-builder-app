@@ -171,11 +171,11 @@ function ResumeBuilderInner() {
 
               {/* Floating Pagination Controls */}
               <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
-                <div className="pointer-events-auto flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-md border border-black/10 rounded-full shadow-2xl">
+                <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-md border border-black/10 rounded-full shadow-2xl text-sm sm:gap-3 sm:px-6 sm:py-3 sm:text-base">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage <= 1}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-all sm:px-4 sm:py-2 ${
                       currentPage <= 1
                         ? 'text-slate-400 cursor-not-allowed'
                         : 'text-slate-900 hover:bg-black/5'
@@ -184,14 +184,14 @@ function ResumeBuilderInner() {
                     ← Previous
                   </button>
 
-                  <span className="text-slate-900 font-medium px-3">
+                  <span className="text-slate-900 font-medium px-2 sm:px-3">
                     Page {currentPage} of {totalPages}
                   </span>
 
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage >= totalPages}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-all sm:px-4 sm:py-2 ${
                       currentPage >= totalPages
                         ? 'text-slate-400 cursor-not-allowed'
                         : 'text-slate-900 hover:bg-black/5'
@@ -203,7 +203,7 @@ function ResumeBuilderInner() {
                   <button
                     onClick={downloadPdf}
                     disabled={downloadDisabled}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-all sm:px-4 sm:py-2 ${
                       downloadDisabled
                         ? 'text-slate-400 cursor-not-allowed'
                         : 'text-slate-900 hover:bg-black/5'
