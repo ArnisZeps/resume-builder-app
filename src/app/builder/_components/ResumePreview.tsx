@@ -19,13 +19,11 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
   const [scale, setScale] = useState(1);
   const [pages, setPages] = useState<string[]>(['']);
 
-  // A4 dimensions in pixels at 96 DPI
   const A4_WIDTH = 794;
   const A4_HEIGHT = 1123;
   const PADDING = 60;
   const CONTENT_HEIGHT = A4_HEIGHT - (PADDING * 2);
 
-  // Calculate scale to fit container width
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
@@ -107,7 +105,6 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     for (const child of children) {
       const childHeight = getOuterHeight(child);
 
-      // If child itself is too tall for the available space, recursively split it.
       if (childHeight > availableForChildren) {
         if (currentFragmentChildren.length > 0) {
           flush();
@@ -162,20 +159,17 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
         const elementHeight = getOuterHeight(element);
         const remainingHeight = CONTENT_HEIGHT - currentHeight;
 
-        // Fits in current page
         if (elementHeight <= remainingHeight) {
           currentPageContent.push(element.outerHTML);
           currentHeight += elementHeight;
           continue;
         }
 
-        // Doesn't fit in remaining space: try splitting it to fill the current page.
         if (currentPageContent.length > 0 && remainingHeight > 48) {
           const fillFragments = splitElementByChildren(element, remainingHeight);
           const didSplit = fillFragments.length > 1 || fillFragments[0] !== element.outerHTML;
 
           if (didSplit) {
-            // Put the first fragment on the current page, then continue packing the rest.
             currentPageContent.push(fillFragments[0]);
             flushPage();
 
@@ -194,19 +188,16 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
           }
         }
 
-        // Doesn't fit: close current page if it has content
         if (currentPageContent.length > 0) {
           flushPage();
         }
 
-        // Now we're at the top of a new page
         if (elementHeight <= CONTENT_HEIGHT) {
           currentPageContent.push(element.outerHTML);
           currentHeight += elementHeight;
           continue;
         }
 
-        // Element itself is taller than a page: split by its direct children into multiple page fragments.
         const fragments = splitElementByChildren(element, CONTENT_HEIGHT);
         for (const frag of fragments) {
           const fragHeight = measureHtmlFragmentHeight(frag);
@@ -241,99 +232,6 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     return () => clearTimeout(timer);
   }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
 
-  // const handleDownload = () => {
-  //   setIsDownloading(true);
-    
-  //   try {
-  //     const iframe = document.createElement('iframe');
-  //     iframe.style.position = 'absolute';
-  //     iframe.style.width = '0';
-  //     iframe.style.height = '0';
-  //     iframe.style.border = 'none';
-  //     document.body.appendChild(iframe);
-      
-  //     const iframeDoc = iframe.contentWindow?.document;
-  //     if (!iframeDoc) return;
-      
-  //     const allPagesContent = pages.map((pageContent, index) => `
-  //       <div class="resume-page" style="page-break-after: ${index < pages.length - 1 ? 'always' : 'auto'};">
-  //         ${pageContent}
-  //       </div>
-  //     `).join('');
-      
-  //     const firstName = resumeData.personalInfo.firstName || 'Resume';
-  //     const lastName = resumeData.personalInfo.lastName || '';
-      
-  //     iframeDoc.open();
-  //     iframeDoc.write(`
-  //       <!DOCTYPE html>
-  //       <html>
-  //         <head>
-  //           <meta charset="UTF-8">
-  //           <title>${firstName}_${lastName}_Resume</title>
-  //           <style>
-  //             * {
-  //               margin: 0;
-  //               padding: 0;
-  //               box-sizing: border-box;
-  //             }
-              
-  //             body {
-  //               font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  //               background: white;
-  //               -webkit-print-color-adjust: exact;
-  //               print-color-adjust: exact;
-  //             }
-              
-  //             .resume-page {
-  //               width: 794px;
-  //               height: 1123px;
-  //               padding: 60px;
-  //               margin: 0 auto;
-  //               background: white;
-  //               position: relative;
-  //             }
-              
-  //             @page {
-  //               size: A4;
-  //               margin: 0;
-  //             }
-              
-  //             @media print {
-  //               body {
-  //                 margin: 0;
-  //                 padding: 0;
-  //               }
-                
-  //               .resume-page {
-  //                 width: 100%;
-  //                 height: 100vh;
-  //                 margin: 0;
-  //               }
-  //             }
-  //           </style>
-  //         </head>
-  //         <body>
-  //           ${allPagesContent}
-  //         </body>
-  //       </html>
-  //     `);
-  //     iframeDoc.close();
-      
-  //     setTimeout(() => {
-  //       iframe.contentWindow?.print();
-  //       setTimeout(() => {
-  //         document.body.removeChild(iframe);
-  //         setIsDownloading(false);
-  //       }, 100);
-  //     }, 250);
-      
-  //   } catch (error) {
-  //     console.error('Error downloading PDF:', error);
-  //     setIsDownloading(false);
-  //   }
-  // };
-
   const SelectedTemplate = templates[selectedTemplate];
 
   const currentPageContent = pages[currentPage - 1] || '';
@@ -360,23 +258,6 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
         <div ref={fragmentMeasureRef} />
       </div>
 
-      {/* Download Button */}
-      {/* <div className="flex-shrink-0 p-4 border-b border-white/20">
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className={`w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-            isDownloading
-              ? 'bg-gray-600 cursor-not-allowed text-gray-400'
-              : 'bg-yellow-400 hover:bg-yellow-300 text-violet-900 hover:shadow-lg'
-          }`}
-        >
-          <ArrowDownTrayIcon className="w-5 h-5" />
-          {isDownloading ? 'Preparing PDF...' : 'Download as PDF'}
-        </button>
-      </div> */}
-
-      {/* Preview Area */}
       <div 
         ref={containerRef}
         className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-none p-4"
