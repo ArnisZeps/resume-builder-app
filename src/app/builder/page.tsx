@@ -21,7 +21,7 @@ export default function ResumeBuilderPage() {
               <ResumeBuilderForm />
             </div>
 
-            <div className="w-1/2 fixed right-0 top-[72px] h-[calc(100vh-72px)] overflow-hidden">
+            <div className="w-1/2 fixed right-0 top-[72px] h-[calc(100vh-72px)] overflow-auto">
               <div className="p-6 h-full">
                 <ResumePreview />
               </div>

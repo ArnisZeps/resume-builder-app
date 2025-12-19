@@ -21,20 +21,13 @@ export default function ResumePreview() {
   const PADDING = 60;
   const CONTENT_HEIGHT = A4_HEIGHT - (PADDING * 2);
 
-  // Calculate scale to fit container width AND height
+  // Calculate scale to fit container width
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        const containerHeight = containerRef.current.clientHeight;
-        
-        // Calculate scale based on both dimensions with padding
-        const scaleX = (containerWidth - 40) / A4_WIDTH;
-        const scaleY = (containerHeight - 40) / A4_HEIGHT;
-        
-        // Use the smaller scale to ensure it fits both dimensions
-        const newScale = Math.min(scaleX, scaleY, 1);
-        setScale(newScale);
+        const scaleX = Math.min((containerWidth - 40) / A4_WIDTH, 1);
+        setScale(scaleX);
       }
     };
 
@@ -96,98 +89,98 @@ export default function ResumePreview() {
     return () => clearTimeout(timer);
   }, [resumeData, selectedTemplate, CONTENT_HEIGHT]);
 
-  const handleDownload = () => {
-    setIsDownloading(true);
+  // const handleDownload = () => {
+  //   setIsDownloading(true);
     
-    try {
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'absolute';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = 'none';
-      document.body.appendChild(iframe);
+  //   try {
+  //     const iframe = document.createElement('iframe');
+  //     iframe.style.position = 'absolute';
+  //     iframe.style.width = '0';
+  //     iframe.style.height = '0';
+  //     iframe.style.border = 'none';
+  //     document.body.appendChild(iframe);
       
-      const iframeDoc = iframe.contentWindow?.document;
-      if (!iframeDoc) return;
+  //     const iframeDoc = iframe.contentWindow?.document;
+  //     if (!iframeDoc) return;
       
-      const allPagesContent = pages.map((pageContent, index) => `
-        <div class="resume-page" style="page-break-after: ${index < pages.length - 1 ? 'always' : 'auto'};">
-          ${pageContent}
-        </div>
-      `).join('');
+  //     const allPagesContent = pages.map((pageContent, index) => `
+  //       <div class="resume-page" style="page-break-after: ${index < pages.length - 1 ? 'always' : 'auto'};">
+  //         ${pageContent}
+  //       </div>
+  //     `).join('');
       
-      const firstName = resumeData.personalInfo.firstName || 'Resume';
-      const lastName = resumeData.personalInfo.lastName || '';
+  //     const firstName = resumeData.personalInfo.firstName || 'Resume';
+  //     const lastName = resumeData.personalInfo.lastName || '';
       
-      iframeDoc.open();
-      iframeDoc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <title>${firstName}_${lastName}_Resume</title>
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
+  //     iframeDoc.open();
+  //     iframeDoc.write(`
+  //       <!DOCTYPE html>
+  //       <html>
+  //         <head>
+  //           <meta charset="UTF-8">
+  //           <title>${firstName}_${lastName}_Resume</title>
+  //           <style>
+  //             * {
+  //               margin: 0;
+  //               padding: 0;
+  //               box-sizing: border-box;
+  //             }
               
-              body {
-                font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                background: white;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-              }
+  //             body {
+  //               font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  //               background: white;
+  //               -webkit-print-color-adjust: exact;
+  //               print-color-adjust: exact;
+  //             }
               
-              .resume-page {
-                width: 794px;
-                height: 1123px;
-                padding: 60px;
-                margin: 0 auto;
-                background: white;
-                position: relative;
-              }
+  //             .resume-page {
+  //               width: 794px;
+  //               height: 1123px;
+  //               padding: 60px;
+  //               margin: 0 auto;
+  //               background: white;
+  //               position: relative;
+  //             }
               
-              @page {
-                size: A4;
-                margin: 0;
-              }
+  //             @page {
+  //               size: A4;
+  //               margin: 0;
+  //             }
               
-              @media print {
-                body {
-                  margin: 0;
-                  padding: 0;
-                }
+  //             @media print {
+  //               body {
+  //                 margin: 0;
+  //                 padding: 0;
+  //               }
                 
-                .resume-page {
-                  width: 100%;
-                  height: 100vh;
-                  margin: 0;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${allPagesContent}
-          </body>
-        </html>
-      `);
-      iframeDoc.close();
+  //               .resume-page {
+  //                 width: 100%;
+  //                 height: 100vh;
+  //                 margin: 0;
+  //               }
+  //             }
+  //           </style>
+  //         </head>
+  //         <body>
+  //           ${allPagesContent}
+  //         </body>
+  //       </html>
+  //     `);
+  //     iframeDoc.close();
       
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          setIsDownloading(false);
-        }, 100);
-      }, 250);
+  //     setTimeout(() => {
+  //       iframe.contentWindow?.print();
+  //       setTimeout(() => {
+  //         document.body.removeChild(iframe);
+  //         setIsDownloading(false);
+  //       }, 100);
+  //     }, 250);
       
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      setIsDownloading(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Error downloading PDF:', error);
+  //     setIsDownloading(false);
+  //   }
+  // };
 
   const SelectedTemplate = templates[selectedTemplate];
 
@@ -207,7 +200,7 @@ export default function ResumePreview() {
       </div>
 
       {/* Download Button */}
-      <div className="flex-shrink-0 p-4 border-b border-white/20">
+      {/* <div className="flex-shrink-0 p-4 border-b border-white/20">
         <button
           onClick={handleDownload}
           disabled={isDownloading}
@@ -220,23 +213,22 @@ export default function ResumePreview() {
           <ArrowDownTrayIcon className="w-5 h-5" />
           {isDownloading ? 'Preparing PDF...' : 'Download as PDF'}
         </button>
-      </div>
+      </div> */}
 
       {/* Preview Area */}
       <div 
         ref={containerRef}
-        className="flex-1 flex items-center justify-center p-4 overflow-hidden"
+        className="flex-1 flex items-center justify-center p-4"
       >
         <div
           style={{
-            width: `${A4_WIDTH * scale}px`,
-            height: `${A4_HEIGHT * scale}px`,
-            transition: 'all 0.2s ease-out',
+            transform: `scale(${scale})`,
+            transformOrigin: 'center',
+            transition: 'transform 0.2s ease-out',
           }}
         >
-          {/* A4 Page */}
           <div
-            className="shadow-2xl origin-top-left"
+            className="shadow-2xl"
             style={{
               width: `${A4_WIDTH}px`,
               height: `${A4_HEIGHT}px`,
@@ -245,8 +237,6 @@ export default function ResumePreview() {
               boxSizing: 'border-box',
               overflow: 'hidden',
               fontFamily: 'system-ui, -apple-system, sans-serif',
-              transform: `scale(${scale})`,
-              transformOrigin: 'top left',
             }}
             dangerouslySetInnerHTML={{ __html: pages[currentPage - 1] || '' }}
           />
