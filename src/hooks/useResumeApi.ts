@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { ResumeData } from '../app/builder/_components/ResumeContext';
 import type { ResumeStyleSettings } from '../app/builder/_components/templates/templateKit';
 import { normalizeStyleSettings } from '../app/builder/_components/templates/templateKit';
-import { appwriteDatabase, Query } from '@/lib/appwrite';
+import { appwriteAuth, appwriteDatabase, appwriteStorage, Query } from '@/lib/appwrite';
 
 interface SaveResumeResponse {
   success: boolean;
@@ -18,6 +18,8 @@ interface UseResumeApiReturn {
   updateResume: (resumeId: string, resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings }) => Promise<SaveResumeResponse>;
   getResume: (resumeId: string) => Promise<{ success: boolean; data?: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; id: string }; error?: string }>;
   getUserResumes: (userId: string) => Promise<{ success: boolean; data?: Array<{ id: string; title: string; createdAt: string; updatedAt: string; template: string }>; error?: string }>;
+  uploadProfilePicture: (file: File) => Promise<{ success: boolean; fileId?: string; error?: string }>;
+  deleteProfilePicture: (fileId: string) => Promise<{ success: boolean; error?: string }>;
   testListDocuments: () => Promise<{ success: boolean; data?: unknown; error?: string }>;
   deleteResume: (resumeId: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   isLoading: boolean;
@@ -31,6 +33,37 @@ const COLLECTIONS = {
 export function useResumeApi(): UseResumeApiReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const uploadProfilePicture = useCallback(async (file: File) => {
+    try {
+      const currentUser = await appwriteAuth.getCurrentUser();
+      if (!currentUser.success || !currentUser.user) {
+        return { success: false, error: 'You must be logged in to upload a profile picture' };
+      }
+
+      const response = await appwriteStorage.uploadProfilePicture(file, currentUser.user.$id);
+      if (!response.success || !response.file) {
+        return { success: false, error: response.error || 'Failed to upload profile picture' };
+      }
+      return { success: true, fileId: response.file.$id };
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to upload profile picture' };
+    }
+  }, []);
+
+  const deleteProfilePicture = useCallback(async (fileId: string) => {
+    try {
+      const response = await appwriteStorage.deleteProfilePicture(fileId);
+      if (!response.success) {
+        return { success: false, error: response.error || 'Failed to delete profile picture' };
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting profile picture:', err);
+      return { success: false, error: err instanceof Error ? err.message : 'Failed to delete profile picture' };
+    }
+  }, []);
 
   const saveResume = useCallback(async (resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; userId?: string }): Promise<SaveResumeResponse> => {
     setIsLoading(true);
@@ -287,6 +320,8 @@ export function useResumeApi(): UseResumeApiReturn {
     updateResume,
     getResume,
     getUserResumes,
+    uploadProfilePicture,
+    deleteProfilePicture,
     testListDocuments,
     deleteResume,
     isLoading,

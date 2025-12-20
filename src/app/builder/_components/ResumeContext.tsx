@@ -16,6 +16,7 @@ export interface ResumeData extends Record<string, unknown>{
     linkedin: string;
     github: string;
     professionalSummary: string;
+    photoFileId?: string;
   };
   experience: Array<{
     jobTitle: string;
@@ -93,6 +94,7 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       linkedin: '',
       github: '',
       professionalSummary: '',
+      photoFileId: undefined,
     },
     experience: [],
     education: [],

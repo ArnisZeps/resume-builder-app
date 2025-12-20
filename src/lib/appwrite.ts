@@ -1,4 +1,4 @@
-import { Client, Account, ID, Databases, Query } from 'appwrite';
+import { Client, Account, ID, Databases, Query, Storage, Permission, Role } from 'appwrite';
 
 const client = new Client();
 
@@ -8,8 +8,23 @@ client
 
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const storage = new Storage(client);
 
 export { client, ID, Query };
+
+const PROFILE_PICTURES_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_PROFILE_PICTURES_BUCKET_ID || process.env.NEXT_PUBLIC_APPWRITE_PROFILE_BUCKET_ID || '';
+
+export function getProfilePicturePreviewUrl(fileId: string, size = 160) {
+    const endpoint = (process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1').replace(/\/$/, '');
+    const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
+    const bucketId = PROFILE_PICTURES_BUCKET_ID;
+    if (!bucketId || !projectId || !fileId) return '';
+
+    const url = new URL(`${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view`);
+    url.searchParams.set('project', projectId);
+    void size;
+    return url.toString();
+}
 
 export const appwriteAuth = {
     async createAccount(email: string, password: string, name: string) {
@@ -159,3 +174,39 @@ export const appwriteDatabase = {
         }
     }
 }
+
+export const appwriteStorage = {
+    async uploadProfilePicture(file: File, userId: string) {
+        try {
+            const bucketId = PROFILE_PICTURES_BUCKET_ID;
+            if (!bucketId) throw new Error('Missing Appwrite profile picture bucket id');
+
+            const permissions = [
+                // Public read so the image can render in previews/PDF without needing auth in the browser context.
+                Permission.read(Role.any()),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+            ];
+
+            const response = await storage.createFile(bucketId, ID.unique(), file, permissions);
+            return { success: true, file: response };
+        } catch (error: unknown) {
+            console.error('Upload profile picture error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to upload profile picture';
+            return { success: false, error: errorMessage };
+        }
+    },
+
+    async deleteProfilePicture(fileId: string) {
+        try {
+            const bucketId = PROFILE_PICTURES_BUCKET_ID;
+            if (!bucketId) throw new Error('Missing Appwrite profile picture bucket id');
+            await storage.deleteFile(bucketId, fileId);
+            return { success: true };
+        } catch (error: unknown) {
+            console.error('Delete profile picture error:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to delete profile picture';
+            return { success: false, error: errorMessage };
+        }
+    },
+};

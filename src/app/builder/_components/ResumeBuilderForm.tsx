@@ -14,6 +14,7 @@ import ProjectsSection from "./sections/ProjectsSection";
 import CertificationsSection from "./sections/CertificationsSection";
 import { useResumeApi } from "@/hooks/useResumeApi";
 import { appwriteAuth } from "@/lib/appwrite";
+import { getProfilePicturePreviewUrl } from "@/lib/appwrite";
 import { useResumeLoader } from "./useResumeLoader";
 import { useDebouncedFormSync } from "@/hooks/useDebouncedFormSync";
 
@@ -96,10 +97,12 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
 export default function ResumeBuilderForm() {
   const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate, styleSettings, updateStyleSettings, setStyleSettings } = useResumeContext();
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const { saveResume, updateResume, isLoading } = useResumeApi();
+  const { saveResume, updateResume, uploadProfilePicture, deleteProfilePicture, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { resumeId, isEditing, isLoadingResume, loadError, hasLoadedResume } = useResumeLoader();
   const [hasResetForm, setHasResetForm] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
@@ -401,6 +404,79 @@ export default function ResumeBuilderForm() {
           <div className="border-b border-white/20 pb-4">
             <h2 className="text-xl font-bold text-white mb-2">Personal Information</h2>
             <p className="text-white/70 text-sm">Your basic contact information</p>
+          </div>
+
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-sm font-semibold text-white">Profile photo</div>
+                <div className="text-xs text-white/60 mt-1">Optional. Used on templates that support it.</div>
+              </div>
+              {resumeData.personalInfo.photoFileId && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const existing = resumeData.personalInfo.photoFileId;
+                    updatePersonalInfo({ photoFileId: undefined });
+                    if (existing) {
+                      await deleteProfilePicture(existing);
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-md bg-white/10 border border-white/20 text-white text-xs hover:bg-white/20 transition-all duration-200"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+
+            <div className="mt-3 flex items-center gap-4">
+              <div className="h-16 w-16 rounded-md border border-white/20 bg-white/5 overflow-hidden flex items-center justify-center">
+                {resumeData.personalInfo.photoFileId ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={getProfilePicturePreviewUrl(resumeData.personalInfo.photoFileId, 160)}
+                    alt="Profile photo preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="text-white/50 text-xs">No photo</div>
+                )}
+              </div>
+
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={isUploadingPhoto}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setPhotoError(null);
+                    setIsUploadingPhoto(true);
+                    try {
+                      const result = await uploadProfilePicture(file);
+                      if (!result.success || !result.fileId) {
+                        setPhotoError(result.error || 'Upload failed');
+                        return;
+                      }
+
+                      const previous = resumeData.personalInfo.photoFileId;
+                      updatePersonalInfo({ photoFileId: result.fileId });
+
+                      if (previous) {
+                        await deleteProfilePicture(previous);
+                      }
+                    } finally {
+                      setIsUploadingPhoto(false);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="block w-full text-sm text-white/80 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                />
+                {photoError && <div className="text-red-300 text-xs mt-2">{photoError}</div>}
+                {isUploadingPhoto && <div className="text-white/60 text-xs mt-2">Uploading…</div>}
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

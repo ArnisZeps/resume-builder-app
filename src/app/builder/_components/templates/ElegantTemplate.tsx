@@ -1,9 +1,11 @@
 import { ResumeData } from '../ResumeContext';
 import { formatDateRange, getTemplateTheme, type ResumeStyleSettings } from './templateKit';
+import { getProfilePicturePreviewUrl } from '@/lib/appwrite';
 
 export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: ResumeData; styleSettings?: ResumeStyleSettings }) {
   const { personalInfo } = resumeData;
   const { colors, base, line } = getTemplateTheme(styleSettings);
+  const photoUrl = personalInfo.photoFileId ? getProfilePicturePreviewUrl(personalInfo.photoFileId, 180) : '';
 
   const headerDivider = {
     textAlign: 'center',
@@ -32,6 +34,17 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
   return (
     <>
       <div style={headerDivider}>
+        {photoUrl && (
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={photoUrl}
+              alt="Profile photo"
+              style={{ width: '76px', height: '76px', borderRadius: '8px', objectFit: 'cover', border: `${line.hairline}px solid ${colors.divider}` }}
+            />
+          </div>
+        )}
+
         <h1
           style={{
             ...base.headerName,

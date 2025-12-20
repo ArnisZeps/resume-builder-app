@@ -1,10 +1,12 @@
 import { ResumeData } from '../ResumeContext';
 import { formatDateRange, formatMonthYear, getTemplateTheme, type ResumeStyleSettings } from './templateKit';
+import { getProfilePicturePreviewUrl } from '@/lib/appwrite';
 
 export function ModernTemplate({ resumeData, styleSettings }: { resumeData: ResumeData; styleSettings?: ResumeStyleSettings }) {
   const { personalInfo } = resumeData;
 
   const { colors, base, line } = getTemplateTheme(styleSettings);
+  const photoUrl = personalInfo.photoFileId ? getProfilePicturePreviewUrl(personalInfo.photoFileId, 160) : '';
 
   const sectionTitle: React.CSSProperties = {
     ...base.sectionTitle,
@@ -15,23 +17,36 @@ export function ModernTemplate({ resumeData, styleSettings }: { resumeData: Resu
   return (
     <>
       <div style={{ paddingLeft: '12px', borderLeft: `${line.thick}px solid ${colors.accent}`, marginBottom: '16px' }}>
-        <h1 style={{ ...base.headerName, fontSize: '32px', fontWeight: 800 }}>
-          {personalInfo.firstName} {personalInfo.lastName}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt="Profile photo"
+              style={{ width: '68px', height: '68px', borderRadius: '8px', objectFit: 'cover', border: `${line.hairline}px solid ${colors.divider}` }}
+            />
+          )}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: base.itemMeta.fontSize, color: colors.textMuted, marginTop: '8px' }}>
-          {personalInfo.email && <span>{personalInfo.email}</span>}
-          {personalInfo.phone && <span>{personalInfo.phone}</span>}
-          {personalInfo.location && <span>{personalInfo.location}</span>}
-        </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={{ ...base.headerName, fontSize: '32px', fontWeight: 800 }}>
+              {personalInfo.firstName} {personalInfo.lastName}
+            </h1>
 
-        {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '10px', color: colors.accent, marginTop: '6px' }}>
-            {personalInfo.website && <span>{personalInfo.website}</span>}
-            {personalInfo.linkedin && <span>{personalInfo.linkedin}</span>}
-            {personalInfo.github && <span>{personalInfo.github}</span>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: base.itemMeta.fontSize, color: colors.textMuted, marginTop: '8px' }}>
+              {personalInfo.email && <span>{personalInfo.email}</span>}
+              {personalInfo.phone && <span>{personalInfo.phone}</span>}
+              {personalInfo.location && <span>{personalInfo.location}</span>}
+            </div>
+
+            {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '10px', color: colors.accent, marginTop: '6px' }}>
+                {personalInfo.website && <span>{personalInfo.website}</span>}
+                {personalInfo.linkedin && <span>{personalInfo.linkedin}</span>}
+                {personalInfo.github && <span>{personalInfo.github}</span>}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (

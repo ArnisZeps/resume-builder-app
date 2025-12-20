@@ -1,10 +1,12 @@
 import { ResumeData } from '../ResumeContext';
 import { formatDateRange, formatMonthYear, getTemplateTheme, type ResumeStyleSettings } from './templateKit';
+import { getProfilePicturePreviewUrl } from '@/lib/appwrite';
 
 export function BoldTemplate({ resumeData, styleSettings }: { resumeData: ResumeData; styleSettings?: ResumeStyleSettings }) {
   const { personalInfo } = resumeData;
 
   const { colors, base, line } = getTemplateTheme(styleSettings);
+  const photoUrl = personalInfo.photoFileId ? getProfilePicturePreviewUrl(personalInfo.photoFileId, 180) : '';
 
   const headerWrap = {
     backgroundColor: colors.accent,
@@ -51,9 +53,22 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
   return (
     <>
       <div style={headerWrap}>
-        <h1 style={headerName}>
-          {personalInfo.firstName} {personalInfo.lastName}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {photoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoUrl}
+              alt="Profile photo"
+              style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.6)' }}
+            />
+          )}
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h1 style={headerName}>
+              {personalInfo.firstName} {personalInfo.lastName}
+            </h1>
+          </div>
+        </div>
 
         <div style={headerMetaRow}>
           {personalInfo.email && <span>{personalInfo.email}</span>}
