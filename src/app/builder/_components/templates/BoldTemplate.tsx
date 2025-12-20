@@ -7,9 +7,9 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
   const { colors, base, line } = getTemplateTheme(styleSettings);
 
   const headerWrap = {
-    backgroundColor: colors.headerBgDark,
+    backgroundColor: colors.accent,
     padding: '18px 18px 14px',
-    margin: '-18px -18px 16px',
+    margin: '0 0 16px',
   } as const;
 
   const headerName = {

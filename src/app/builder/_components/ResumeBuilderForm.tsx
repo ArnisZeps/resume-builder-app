@@ -38,7 +38,6 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
 
   const TemplateComponent = useMemo(() => templates[templateKey], [templateKey]);
 
-  // Match ResumePreview sizing so the thumbnail is representative.
   const A4_WIDTH = 794;
   const A4_HEIGHT = 1123;
   const PADDING = 60;
@@ -49,7 +48,6 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
       if (!host) return;
       const width = host.clientWidth;
       if (!width) return;
-      // Keep a small margin so the scaled page doesn't touch edges.
       const next = Math.min((width - 12) / A4_WIDTH, 1);
       setScale(next);
     };
@@ -65,7 +63,8 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
   return (
     <div ref={containerRef} className="w-full">
       <div
-        className="bg-white rounded-md overflow-hidden"
+        className="bg-white rounded-md overflow-hidden relative"
+        style={{ height: `${Math.round(A4_HEIGHT * scale)}px` }}
       >
         <div
           style={{
