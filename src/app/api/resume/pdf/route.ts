@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
-import fs from 'node:fs';
 
 export const runtime = 'nodejs';
 
@@ -141,7 +140,12 @@ export async function POST(req: NextRequest) {
 
       const filename = safeFilename(title) || 'Resume';
 
-      return new NextResponse(pdfBuffer, {
+      const pdfArrayBuffer = pdfBuffer.buffer.slice(
+        pdfBuffer.byteOffset,
+        pdfBuffer.byteOffset + pdfBuffer.byteLength
+      ) as ArrayBuffer;
+
+      return new NextResponse(pdfArrayBuffer, {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="${filename}.pdf"`,
