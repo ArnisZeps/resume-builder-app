@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { TemplateType, useResumeContext } from "./ResumeContext";
-import { templateNames } from "./templates";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { templateNames, templates } from "./templates";
 import WorkExperienceSection from "./sections/WorkExperienceSection";
 import EducationSection from "./sections/EducationSection";
 import SkillsSection from "./sections/SkillsSection";
@@ -31,9 +30,73 @@ const resumeFormSchema = z.object({
 
 type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
+function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
+  const { resumeData } = useResumeContext();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  const TemplateComponent = useMemo(() => templates[templateKey], [templateKey]);
+
+  // Match ResumePreview sizing so the thumbnail is representative.
+  const A4_WIDTH = 794;
+  const A4_HEIGHT = 1123;
+  const PADDING = 60;
+
+  useEffect(() => {
+    const updateScale = () => {
+      const host = containerRef.current;
+      if (!host) return;
+      const width = host.clientWidth;
+      if (!width) return;
+      // Keep a small margin so the scaled page doesn't touch edges.
+      const next = Math.min((width - 12) / A4_WIDTH, 1);
+      setScale(next);
+    };
+
+    updateScale();
+    const resizeObserver = new ResizeObserver(updateScale);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="w-full">
+      <div
+        className="bg-white rounded-md overflow-hidden"
+        style={{ aspectRatio: "210 / 297" }}
+      >
+        <div
+          style={{
+            width: `${A4_WIDTH}px`,
+            height: `${A4_HEIGHT}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: "top left",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              width: `${A4_WIDTH}px`,
+              height: `${A4_HEIGHT}px`,
+              padding: `${PADDING}px`,
+              boxSizing: "border-box",
+              overflow: "hidden",
+              backgroundColor: "white",
+            }}
+          >
+            <TemplateComponent resumeData={resumeData} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ResumeBuilderForm() {
   const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate } = useResumeContext();
-  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const { saveResume, updateResume, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { resumeId, isEditing, isLoadingResume, loadError, hasLoadedResume } = useResumeLoader();
@@ -179,35 +242,60 @@ export default function ResumeBuilderForm() {
           </button>
         </div>
       </div>
-      <div className="relative mt-6 mb-4">
-        <button
-          onClick={() => setShowTemplateSelector(!showTemplateSelector)}
-          className="flex items-center justify-between w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-200"
-        >
-          <span className="font-medium">Template: {templateNames[selectedTemplate]}</span>
-          <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${showTemplateSelector ? "rotate-180" : ""}`} />
-        </button>
+      <div className="mt-6 mb-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">Template</h2>
+            <p className="text-white/70 text-sm">Selected: {templateNames[selectedTemplate]}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowTemplatePicker((v) => !v)}
+            className="px-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-200"
+          >
+            {showTemplatePicker ? 'Close' : 'Change template'}
+          </button>
+        </div>
 
-        <div>
-          {showTemplateSelector && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm border border-white/20 rounded-lg shadow-xl z-10">
-              {Object.entries(templateNames).map(([key, name]) => (
+        {showTemplatePicker && (
+          <div
+            role="radiogroup"
+            aria-label="Resume template"
+            className="mt-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+          >
+            {Object.entries(templateNames).map(([key, name]) => {
+              const isSelected = selectedTemplate === key;
+              return (
                 <button
                   key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => {
                     setSelectedTemplate(key as TemplateType);
-                    setShowTemplateSelector(false);
+                    setShowTemplatePicker(false);
                   }}
-                  className={`w-full px-4 py-3 text-left transition-all duration-200 first:rounded-t-lg last:rounded-b-lg ${
-                    selectedTemplate === key ? "bg-violet-600 text-white" : "hover:bg-gray-100 text-gray-800"
-                  }`}
+                  className={
+                    `group text-left rounded-lg border transition-all duration-200 ` +
+                    (isSelected
+                      ? "border-yellow-400/60 bg-white/15 ring-2 ring-yellow-400/40"
+                      : "border-white/20 bg-white/10 hover:bg-white/15 hover:border-white/30")
+                  }
                 >
-                  {name}
+                  <div className="p-3">
+                    <div className="rounded-md border border-black/10 bg-white">
+                      <TemplateThumbnail templateKey={key as TemplateType} />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <div className="text-white font-semibold text-sm truncate">{name}</div>
+                      {isSelected && <div className="text-yellow-300 text-xs font-semibold">Selected</div>}
+                    </div>
+                  </div>
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="space-y-8 ">
