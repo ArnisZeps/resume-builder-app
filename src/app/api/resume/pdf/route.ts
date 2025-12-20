@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
+import fs from 'node:fs';
 
 export const runtime = 'nodejs';
 
@@ -106,10 +107,13 @@ export async function POST(req: NextRequest) {
   const title = typeof body.title === 'string' && body.title.trim().length > 0 ? body.title.trim() : 'Resume';
 
   try {
-    const executablePath = await chromium.executablePath();
+    const envExecutablePath = process.env.PUPPETEER_EXECUTABLE_PATH?.trim();
+    const executablePath = envExecutablePath && envExecutablePath.length > 0 ? envExecutablePath : await chromium.executablePath();
+    const args = envExecutablePath && envExecutablePath.length > 0 ? [] : chromium.args;
 
+    console.log('Using browser executable at:', executablePath);
     const browser = await puppeteer.launch({
-      args: chromium.args,
+      args,
       executablePath,
       headless: true,
     });
