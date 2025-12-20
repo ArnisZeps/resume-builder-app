@@ -37,14 +37,14 @@ export const templates = {
 
 export const templateNames = {
   classic: 'Classic',
-  modern: 'Modern',
-  minimal: 'Minimal',
-  executive: 'Executive Professional',
+  modern: 'Contemporary',
+  minimal: 'Simple',
+  executive: 'Executive',
   compact: 'Compact',
   twoColumn: 'Two-Column',
-  creative: 'Creative',
-  tech: 'Tech Developer',
+  creative: 'Studio',
+  tech: 'Engineering',
   elegant: 'Elegant',
-  bold: 'Bold Impact',
+  bold: 'Bold',
 };
 

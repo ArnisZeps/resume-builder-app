@@ -1,285 +1,131 @@
 import { ResumeData } from '../ResumeContext';
+import { BASE, COLORS, formatDateRange, formatMonthYear } from './templateKit';
 
 export function CompactTemplate({ resumeData }: { resumeData: ResumeData }) {
+  const { personalInfo } = resumeData;
+
   return (
     <>
-      {/* Header - Ultra Compact */}
-      <div style={{ marginBottom: '20px', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: '700', 
-          color: '#111827', 
-          margin: '0 0 6px 0',
-          letterSpacing: '0.3px'
-        }}>
-          {resumeData.personalInfo.firstName} {resumeData.personalInfo.lastName}
+      <div style={{ borderBottom: `1px solid ${COLORS.divider}`, paddingBottom: '10px', marginBottom: '12px' }}>
+        <h1 style={{ ...BASE.headerName, fontSize: '26px', fontWeight: 800 }}>
+          {personalInfo.firstName} {personalInfo.lastName}
         </h1>
-        
-        <div style={{ 
-          fontSize: '10px', 
-          color: '#4B5563',
-          lineHeight: '1.5'
-        }}>
-          {resumeData.personalInfo.email && <span>{resumeData.personalInfo.email}</span>}
-          {resumeData.personalInfo.phone && <span> • {resumeData.personalInfo.phone}</span>}
-          {resumeData.personalInfo.location && <span> • {resumeData.personalInfo.location}</span>}
-          {resumeData.personalInfo.website && <span> • {resumeData.personalInfo.website}</span>}
-          {resumeData.personalInfo.linkedin && <span> • {resumeData.personalInfo.linkedin}</span>}
-          {resumeData.personalInfo.github && <span> • {resumeData.personalInfo.github}</span>}
+        <div style={{ fontSize: '10px', color: COLORS.textMuted, lineHeight: '1.5', marginTop: '4px' }}>
+          {personalInfo.email && <span>{personalInfo.email}</span>}
+          {personalInfo.phone && <span> • {personalInfo.phone}</span>}
+          {personalInfo.location && <span> • {personalInfo.location}</span>}
+          {personalInfo.website && <span> • {personalInfo.website}</span>}
+          {personalInfo.linkedin && <span> • {personalInfo.linkedin}</span>}
+          {personalInfo.github && <span> • {personalInfo.github}</span>}
         </div>
       </div>
 
-      {/* Professional Summary */}
-      {resumeData.personalInfo.professionalSummary && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '6px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Summary
-          </h2>
-          <p style={{ 
-            color: '#374151', 
-            fontSize: '10px', 
-            lineHeight: '1.6', 
-            margin: 0
-          }}>
-            {resumeData.personalInfo.professionalSummary}
-          </p>
+      {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Summary</h2>
+          <p style={{ ...BASE.bodyText, fontSize: '10px' }}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
-      {/* Work Experience */}
-      {resumeData.experience && resumeData.experience.length > 0 && resumeData.experience.some(exp => exp.jobTitle || exp.company) && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Experience
-          </h2>
-          {resumeData.experience.map((exp, index) => (
-            (exp.jobTitle || exp.company) && (
-              <div key={index} style={{ marginBottom: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '2px' }}>
-                  <h3 style={{ 
-                    fontSize: '11px', 
-                    fontWeight: '700', 
-                    color: '#111827', 
-                    margin: 0 
-                  }}>
-                    {exp.jobTitle} • {exp.company}
+      {resumeData.experience?.some((exp) => exp.jobTitle || exp.company) && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Experience</h2>
+          {resumeData.experience
+            .filter((exp) => exp.jobTitle || exp.company)
+            .map((exp, index) => (
+              <div key={index} style={{ marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                  <h3 style={{ ...BASE.itemTitle, fontSize: '11px' }}>
+                    {exp.jobTitle}{exp.company && ` • ${exp.company}`}
                   </h3>
-                  {exp.startDate && (
-                    <span style={{ fontSize: '9px', color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      {new Date(exp.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - {' '}
-                      {exp.current ? 'Present' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Present'}
-                    </span>
-                  )}
+                  <span style={{ fontSize: '9px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>
+                    {formatDateRange(exp.startDate, exp.endDate, exp.current)}
+                  </span>
                 </div>
-                {exp.location && (
-                  <p style={{ fontSize: '9px', color: '#6B7280', margin: '0 0 4px 0', fontStyle: 'italic' }}>
-                    {exp.location}
-                  </p>
-                )}
-                {exp.responsibilities && exp.responsibilities.length > 0 && exp.responsibilities.some(resp => resp.trim()) && (
-                  <ul style={{ 
-                    margin: '4px 0 0 14px', 
-                    padding: 0,
-                    listStyleType: 'disc'
-                  }}>
-                    {exp.responsibilities.filter(resp => resp.trim()).map((responsibility, idx) => (
-                      <li key={idx} style={{ 
-                        fontSize: '10px', 
-                        color: '#374151', 
-                        lineHeight: '1.5', 
-                        marginBottom: '2px'
-                      }}>
-                        {responsibility}
-                      </li>
-                    ))}
+                {exp.location && <div style={{ fontSize: '9px', color: COLORS.textMuted, marginTop: '2px' }}>{exp.location}</div>}
+                {exp.responsibilities?.some((r) => r.trim()) && (
+                  <ul style={{ margin: '4px 0 0 16px', padding: 0, listStyleType: 'disc' }}>
+                    {exp.responsibilities
+                      .filter((r) => r.trim())
+                      .map((r, idx) => (
+                        <li key={idx} style={{ ...BASE.bodyText, fontSize: '10px', marginBottom: '2px' }}>
+                          {r}
+                        </li>
+                      ))}
                   </ul>
                 )}
               </div>
-            )
-          ))}
-        </div>
-      )}
-
-      {/* Education */}
-      {resumeData.education && resumeData.education.length > 0 && resumeData.education.some(edu => edu.degree || edu.institution) && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Education
-          </h2>
-          {resumeData.education.map((edu, index) => (
-            (edu.degree || edu.institution) && (
-              <div key={index} style={{ marginBottom: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <div>
-                    <h3 style={{ 
-                      fontSize: '11px', 
-                      fontWeight: '700', 
-                      color: '#111827', 
-                      margin: 0 
-                    }}>
-                      {edu.degree}
-                    </h3>
-                    <p style={{ 
-                      fontSize: '10px', 
-                      color: '#4B5563', 
-                      margin: '2px 0'
-                    }}>
-                      {edu.institution}{edu.location && ` • ${edu.location}`}
-                    </p>
-                    {edu.gpa && (
-                      <p style={{ fontSize: '9px', color: '#6B7280', margin: '2px 0 0 0' }}>
-                        GPA: {edu.gpa}
-                      </p>
-                    )}
-                  </div>
-                  {edu.graduationDate && (
-                    <span style={{ fontSize: '9px', color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      {new Date(edu.graduationDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )
-          ))}
-        </div>
-      )}
-
-      {/* Skills */}
-      {resumeData.skills && resumeData.skills.length > 0 && resumeData.skills.some(skill => skill.category || skill.items.some(item => item.trim())) && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Skills
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {resumeData.skills.map((skillGroup, index) => (
-              (skillGroup.category || skillGroup.items.some(item => item.trim())) && (
-                <div key={index} style={{ fontSize: '10px', color: '#374151' }}>
-                  {skillGroup.category && <strong>{skillGroup.category}: </strong>}
-                  {skillGroup.items.filter(item => item.trim()).join(', ')}
-                </div>
-              )
             ))}
-          </div>
         </div>
       )}
 
-      {/* Projects */}
-      {resumeData.projects && resumeData.projects.length > 0 && resumeData.projects.some(project => project.title || project.description) && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Projects
-          </h2>
-          {resumeData.projects.map((project, index) => (
-            (project.title || project.description) && (
-              <div key={index} style={{ marginBottom: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#111827', margin: 0 }}>
-                    {project.title}
-                  </h3>
-                  {project.startDate && (
-                    <span style={{ fontSize: '9px', color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      {new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
-                </div>
-                {project.description && (
-                  <p style={{ fontSize: '10px', color: '#374151', lineHeight: '1.5', margin: '2px 0' }}>
-                    {project.description}
-                  </p>
-                )}
-                {project.technologies && project.technologies.length > 0 && project.technologies.some(tech => tech.trim()) && (
-                  <p style={{ fontSize: '9px', color: '#6B7280', margin: '2px 0 0 0', fontStyle: 'italic' }}>
-                    {project.technologies.filter(tech => tech.trim()).join(', ')}
-                  </p>
-                )}
-              </div>
-            )
-          ))}
-        </div>
-      )}
-
-      {/* Certifications */}
-      {resumeData.certifications && resumeData.certifications.length > 0 && resumeData.certifications.some(cert => cert.name || cert.issuer) && (
-        <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ 
-            fontSize: '12px', 
-            fontWeight: '700', 
-            color: '#111827', 
-            marginBottom: '8px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
-            Certifications
-          </h2>
-          {resumeData.certifications.map((cert, index) => (
-            (cert.name || cert.issuer) && (
+      {resumeData.education?.some((edu) => edu.degree || edu.institution) && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Education</h2>
+          {resumeData.education
+            .filter((edu) => edu.degree || edu.institution)
+            .map((edu, index) => (
               <div key={index} style={{ marginBottom: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <div>
-                    <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#111827', margin: 0 }}>
-                      {cert.name}
-                    </h3>
-                    <p style={{ fontSize: '10px', color: '#4B5563', margin: '2px 0' }}>
-                      {cert.issuer}
-                    </p>
-                  </div>
-                  {cert.date && (
-                    <span style={{ fontSize: '9px', color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      {new Date(cert.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                    </span>
-                  )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                  <h3 style={{ ...BASE.itemTitle, fontSize: '11px' }}>{edu.degree}</h3>
+                  <span style={{ fontSize: '9px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(edu.graduationDate)}</span>
+                </div>
+                <div style={{ ...BASE.itemMeta, fontSize: '10px', color: COLORS.textMuted }}>
+                  {edu.institution}{edu.location && ` • ${edu.location}`}{edu.gpa && ` • GPA: ${edu.gpa}`}
                 </div>
               </div>
-            )
-          ))}
+            ))}
         </div>
       )}
 
-      {/* Empty State */}
-      {!resumeData.personalInfo.firstName && !resumeData.personalInfo.lastName && (
-        <div style={{ textAlign: 'center', padding: '60px 40px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
-            Compact Resume Template
-          </h3>
-          <p style={{ color: '#6B7280', margin: 0, fontSize: '12px', lineHeight: '1.6' }}>
-            Space-efficient design that fits more content on each page.<br />
-            Perfect for experienced professionals with extensive backgrounds.
-          </p>
+      {resumeData.skills?.some((g) => g.category || g.items?.some((i) => i.trim())) && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Skills</h2>
+          {resumeData.skills
+            .filter((g) => g.category || g.items?.some((i) => i.trim()))
+            .map((g, index) => (
+              <div key={index} style={{ marginBottom: '6px' }}>
+                {g.category && <div style={{ fontSize: '10px', fontWeight: 700, color: COLORS.textPrimary, marginBottom: '2px' }}>{g.category}</div>}
+                <div style={{ ...BASE.bodyText, fontSize: '10px' }}>{g.items?.filter((i) => i.trim()).join(', ')}</div>
+              </div>
+            ))}
+        </div>
+      )}
+
+      {resumeData.projects?.some((p) => p.title || p.description) && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Projects</h2>
+          {resumeData.projects
+            .filter((p) => p.title || p.description)
+            .map((p, index) => (
+              <div key={index} style={{ marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                  <h3 style={{ ...BASE.itemTitle, fontSize: '11px' }}>{p.title}</h3>
+                  <span style={{ fontSize: '9px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>{formatDateRange(p.startDate, p.endDate, false)}</span>
+                </div>
+                {p.url && <div style={{ fontSize: '9px', color: COLORS.link, marginTop: '2px' }}>{p.url}</div>}
+                {p.description && <p style={{ ...BASE.bodyText, fontSize: '10px', marginTop: '3px' }}>{p.description}</p>}
+              </div>
+            ))}
+        </div>
+      )}
+
+      {resumeData.certifications?.some((c) => c.name || c.issuer) && (
+        <div style={{ marginBottom: '12px' }}>
+          <h2 style={{ ...BASE.sectionTitle, fontSize: '12px', marginBottom: '8px' }}>Certifications</h2>
+          {resumeData.certifications
+            .filter((c) => c.name || c.issuer)
+            .map((c, index) => (
+              <div key={index} style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                  <h3 style={{ ...BASE.itemTitle, fontSize: '11px' }}>{c.name}</h3>
+                  <span style={{ fontSize: '9px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(c.date)}</span>
+                </div>
+                <div style={{ ...BASE.itemMeta, fontSize: '10px', color: COLORS.textMuted }}>
+                  {c.issuer}{c.url && ` • ${c.url}`}
+                </div>
+              </div>
+            ))}
         </div>
       )}
     </>

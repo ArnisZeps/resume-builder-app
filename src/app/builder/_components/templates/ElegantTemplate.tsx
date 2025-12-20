@@ -1,130 +1,78 @@
 import { ResumeData } from '../ResumeContext';
+import { BASE, COLORS, formatDateRange, formatMonthYear } from './templateKit';
 
 export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
+  const { personalInfo } = resumeData;
+
   return (
     <>
-      {/* Header with Elegant Styling */}
-      <div style={{ textAlign: 'center', marginBottom: '28px', paddingBottom: '20px', borderBottom: '1px solid #E5E7EB' }}>
-        <h1 style={{ 
-          fontSize: '36px', 
-          fontWeight: '300', 
-          color: '#1F2937', 
-          margin: '0 0 4px 0',
-          letterSpacing: '2px',
-          textTransform: 'uppercase'
-        }}>
-          {resumeData.personalInfo.firstName} {resumeData.personalInfo.lastName}
+      <div style={{ textAlign: 'center', borderBottom: `1px solid ${COLORS.divider}`, paddingBottom: '14px', marginBottom: '18px' }}>
+        <h1
+          style={{
+            ...BASE.headerName,
+            fontSize: '34px',
+            fontWeight: 600,
+            letterSpacing: '1.2px',
+            textTransform: 'uppercase',
+            margin: '0 0 6px 0',
+          }}
+        >
+          {personalInfo.firstName} {personalInfo.lastName}
         </h1>
-        
-        <div style={{ 
-          fontSize: '11px', 
-          color: '#6B7280',
-          letterSpacing: '0.5px',
-          marginTop: '10px'
-        }}>
-          {resumeData.personalInfo.email && <span>{resumeData.personalInfo.email}</span>}
-          {resumeData.personalInfo.phone && <span> | {resumeData.personalInfo.phone}</span>}
-          {resumeData.personalInfo.location && <span> | {resumeData.personalInfo.location}</span>}
+
+        <div style={{ fontSize: '11px', color: COLORS.textMuted, letterSpacing: '0.3px' }}>
+          {personalInfo.email && <span>{personalInfo.email}</span>}
+          {personalInfo.phone && <span> • {personalInfo.phone}</span>}
+          {personalInfo.location && <span> • {personalInfo.location}</span>}
         </div>
-        
-        {(resumeData.personalInfo.website || resumeData.personalInfo.linkedin || resumeData.personalInfo.github) && (
-          <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '6px', letterSpacing: '0.3px' }}>
-            {resumeData.personalInfo.website && <span>{resumeData.personalInfo.website}</span>}
-            {resumeData.personalInfo.linkedin && <span> | {resumeData.personalInfo.linkedin}</span>}
-            {resumeData.personalInfo.github && <span> | {resumeData.personalInfo.github}</span>}
+
+        {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
+          <div style={{ fontSize: '10px', color: COLORS.link, marginTop: '6px' }}>
+            {personalInfo.website && <span>{personalInfo.website}</span>}
+            {personalInfo.linkedin && <span> • {personalInfo.linkedin}</span>}
+            {personalInfo.github && <span> • {personalInfo.github}</span>}
           </div>
         )}
       </div>
 
-      {/* Professional Summary */}
-      {resumeData.personalInfo.professionalSummary && (
-        <div style={{ marginBottom: '26px', textAlign: 'center' }}>
-          <p style={{ 
-            color: '#4B5563', 
-            fontSize: '12px', 
-            lineHeight: '1.8', 
-            margin: '0 auto',
-            maxWidth: '90%',
-            fontStyle: 'italic'
-          }}>
-            {resumeData.personalInfo.professionalSummary}
-          </p>
+      {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
+        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+          <p style={{ ...BASE.bodyText, fontSize: '12px', maxWidth: '92%', margin: '0 auto' }}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
-      {/* Work Experience */}
-      {resumeData.experience && resumeData.experience.length > 0 && resumeData.experience.some(exp => exp.jobTitle || exp.company) && (
-        <div style={{ marginBottom: '26px' }}>
-          <h2 style={{ 
-            fontSize: '14px', 
-            fontWeight: '300', 
-            color: '#1F2937', 
-            marginBottom: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            paddingBottom: '8px'
-          }}>
-            Professional Experience
+      {resumeData.experience?.some((exp) => exp.jobTitle || exp.company) && (
+        <div style={{ marginBottom: '16px' }}>
+          <h2 style={{ ...BASE.sectionTitle, textAlign: 'center', letterSpacing: '1.6px', fontWeight: 600 }}>
+            Experience
           </h2>
-          {resumeData.experience.map((exp, index) => (
-            (exp.jobTitle || exp.company) && (
-              <div key={index} style={{ marginBottom: '18px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '6px' }}>
-                  <h3 style={{ 
-                    fontSize: '13px', 
-                    fontWeight: '600', 
-                    color: '#111827', 
-                    margin: '0 0 2px 0',
-                    letterSpacing: '0.5px'
-                  }}>
-                    {exp.jobTitle}
-                  </h3>
-                  <p style={{ 
-                    fontSize: '11px', 
-                    color: '#6B7280', 
-                    margin: '0',
-                    fontStyle: 'italic'
-                  }}>
+          {resumeData.experience
+            .filter((exp) => exp.jobTitle || exp.company)
+            .map((exp, index) => (
+              <div key={index} style={{ marginBottom: '14px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ ...BASE.itemTitle, fontSize: '12px' }}>{exp.jobTitle}</div>
+                  <div style={{ ...BASE.itemMeta, color: COLORS.textSecondary, marginTop: '2px' }}>
                     {exp.company}{exp.location && ` • ${exp.location}`}
-                  </p>
-                  {exp.startDate && (
-                    <p style={{ fontSize: '10px', color: '#9CA3AF', margin: '4px 0 0 0' }}>
-                      {new Date(exp.startDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - {' '}
-                      {exp.current ? 'Present' : exp.endDate ? new Date(exp.endDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Present'}
-                    </p>
-                  )}
+                  </div>
+                  <div style={{ fontSize: '10px', color: COLORS.textMuted, marginTop: '2px' }}>
+                    {formatDateRange(exp.startDate, exp.endDate, exp.current)}
+                  </div>
                 </div>
-                {exp.responsibilities && exp.responsibilities.length > 0 && exp.responsibilities.some(resp => resp.trim()) && (
-                  <ul style={{ 
-                    margin: '8px 0 0 0', 
-                    padding: '0 20px',
-                    listStyleType: 'none',
-                    textAlign: 'left'
-                  }}>
-                    {exp.responsibilities.filter(resp => resp.trim()).map((responsibility, idx) => (
-                      <li key={idx} style={{ 
-                        fontSize: '11px', 
-                        color: '#374151', 
-                        lineHeight: '1.7', 
-                        marginBottom: '4px',
-                        paddingLeft: '16px',
-                        position: 'relative'
-                      }}>
-                        <span style={{ 
-                          position: 'absolute', 
-                          left: '0',
-                          color: '#D1D5DB'
-                        }}>•</span>
-                        {responsibility}
-                      </li>
-                    ))}
+
+                {exp.responsibilities?.some((r) => r.trim()) && (
+                  <ul style={{ margin: '8px 0 0 18px', padding: 0, listStyleType: 'disc' }}>
+                    {exp.responsibilities
+                      .filter((r) => r.trim())
+                      .map((r, idx) => (
+                        <li key={idx} style={{ ...BASE.bodyText, fontSize: '11px', marginBottom: '3px' }}>
+                          {r}
+                        </li>
+                      ))}
                   </ul>
                 )}
               </div>
-            )
-          ))}
+            ))}
         </div>
       )}
 
