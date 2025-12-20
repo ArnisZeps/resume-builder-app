@@ -12,7 +12,7 @@ interface ResumePreviewProps {
 }
 
 export default function ResumePreview({ currentPage: controlledCurrentPage, onCurrentPageChange, onTotalPagesChange, onPagesChange }: ResumePreviewProps = {}) {
-  const { resumeData, selectedTemplate } = useResumeContext();
+  const { resumeData, selectedTemplate, styleSettings } = useResumeContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const fragmentMeasureRef = useRef<HTMLDivElement>(null);
@@ -230,7 +230,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     }, 100); // Debounce to avoid excessive recalculation
 
     return () => clearTimeout(timer);
-  }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
+  }, [resumeData, selectedTemplate, styleSettings, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
 
   const SelectedTemplate = templates[selectedTemplate] ?? templates.classic;
 
@@ -253,7 +253,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
         }}
       >
         <div ref={contentRef}>
-          <SelectedTemplate resumeData={resumeData} />
+          <SelectedTemplate resumeData={resumeData} styleSettings={styleSettings} />
         </div>
         <div ref={fragmentMeasureRef} />
       </div>

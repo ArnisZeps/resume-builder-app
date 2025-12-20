@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { TemplateType, useResumeContext } from "./ResumeContext";
 import { templateNames, templates } from "./templates";
+import { DEFAULT_STYLE_SETTINGS, RECOMMENDED_ACCENT_COLORS } from "./templates/templateKit";
 import WorkExperienceSection from "./sections/WorkExperienceSection";
 import EducationSection from "./sections/EducationSection";
 import SkillsSection from "./sections/SkillsSection";
@@ -31,7 +32,7 @@ const resumeFormSchema = z.object({
 type ResumeFormData = z.infer<typeof resumeFormSchema>;
 
 function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
-  const { resumeData } = useResumeContext();
+  const { resumeData, styleSettings } = useResumeContext();
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -65,7 +66,6 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
     <div ref={containerRef} className="w-full">
       <div
         className="bg-white rounded-md overflow-hidden"
-        style={{ aspectRatio: "210 / 297" }}
       >
         <div
           style={{
@@ -86,7 +86,7 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
               backgroundColor: "white",
             }}
           >
-            <TemplateComponent resumeData={resumeData} />
+            <TemplateComponent resumeData={resumeData} styleSettings={styleSettings} />
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
 }
 
 export default function ResumeBuilderForm() {
-  const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate } = useResumeContext();
+  const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate, styleSettings, updateStyleSettings, setStyleSettings } = useResumeContext();
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const { saveResume, updateResume, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -157,7 +157,8 @@ export default function ResumeBuilderForm() {
     try {
       const resumePayload = {
         ...resumeData,
-        template: selectedTemplate
+        template: selectedTemplate,
+        styleSettings,
       };
 
       let result;
@@ -255,6 +256,104 @@ export default function ResumeBuilderForm() {
           >
             {showTemplatePicker ? 'Close' : 'Change template'}
           </button>
+        </div>
+
+        <div className="mt-4 bg-white/5 border border-white/10 rounded-lg p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Customization</h3>
+              <p className="text-xs text-white/60">Accent applies to lines and decorative elements</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setStyleSettings(DEFAULT_STYLE_SETTINGS)}
+              className="px-3 py-1.5 rounded-md bg-white/10 border border-white/20 text-white text-xs hover:bg-white/20 transition-all duration-200"
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold text-white/80 uppercase tracking-wide">Accent color</div>
+                  <div className="text-xs text-white/60 mt-1">Used for section dividers, highlights and links</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-5 w-5 rounded-full border border-white/20"
+                    style={{ backgroundColor: styleSettings.accentColor }}
+                    aria-label="Current accent preview"
+                  />
+                  <input
+                    type="color"
+                    value={styleSettings.accentColor}
+                    onChange={(e) => updateStyleSettings({ accentColor: e.target.value })}
+                    className="h-8 w-10 bg-transparent"
+                    aria-label="Pick accent color"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {RECOMMENDED_ACCENT_COLORS.map((hex) => {
+                  const selected = styleSettings.accentColor.toLowerCase() === hex.toLowerCase();
+                  return (
+                    <button
+                      key={hex}
+                      type="button"
+                      onClick={() => updateStyleSettings({ accentColor: hex })}
+                      className={
+                        "h-8 w-8 rounded-md border transition-all duration-200 " +
+                        (selected ? "border-yellow-400/70 ring-2 ring-yellow-400/30" : "border-white/20 hover:border-white/40")
+                      }
+                      style={{ backgroundColor: hex }}
+                      aria-label={`Set accent color to ${hex}`}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <div className="text-xs font-semibold text-white/80 uppercase tracking-wide">Typography</div>
+
+              <div className="mt-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-white">Font size</label>
+                  <div className="text-xs text-white/60">{Math.round(styleSettings.textScale * 100)}%</div>
+                </div>
+                <input
+                  type="range"
+                  min={0.9}
+                  max={1.1}
+                  step={0.01}
+                  value={styleSettings.textScale}
+                  onChange={(e) => updateStyleSettings({ textScale: Number(e.target.value) })}
+                  className="mt-2 w-full"
+                  aria-label="Font size"
+                />
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-white">Line height</label>
+                  <div className="text-xs text-white/60">{Math.round(styleSettings.lineHeightScale * 100)}%</div>
+                </div>
+                <input
+                  type="range"
+                  min={0.9}
+                  max={1.2}
+                  step={0.01}
+                  value={styleSettings.lineHeightScale}
+                  onChange={(e) => updateStyleSettings({ lineHeightScale: Number(e.target.value) })}
+                  className="mt-2 w-full"
+                  aria-label="Line height"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {showTemplatePicker && (

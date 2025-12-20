@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { ResumeData } from '../app/builder/_components/ResumeContext';
+import type { ResumeStyleSettings } from '../app/builder/_components/templates/templateKit';
+import { normalizeStyleSettings } from '../app/builder/_components/templates/templateKit';
 import { appwriteDatabase, Query } from '@/lib/appwrite';
 
 interface SaveResumeResponse {
@@ -12,9 +14,9 @@ interface SaveResumeResponse {
 }
 
 interface UseResumeApiReturn {
-  saveResume: (resumeData: ResumeData & { template: string, userId?: string }) => Promise<SaveResumeResponse>;
-  updateResume: (resumeId: string, resumeData: ResumeData & { template: string }) => Promise<SaveResumeResponse>;
-  getResume: (resumeId: string) => Promise<{ success: boolean; data?: ResumeData & { template: string; id: string }; error?: string }>;
+  saveResume: (resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; userId?: string }) => Promise<SaveResumeResponse>;
+  updateResume: (resumeId: string, resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings }) => Promise<SaveResumeResponse>;
+  getResume: (resumeId: string) => Promise<{ success: boolean; data?: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; id: string }; error?: string }>;
   getUserResumes: (userId: string) => Promise<{ success: boolean; data?: Array<{ id: string; title: string; createdAt: string; updatedAt: string; template: string }>; error?: string }>;
   testListDocuments: () => Promise<{ success: boolean; data?: unknown; error?: string }>;
   deleteResume: (resumeId: string) => Promise<{ success: boolean; message?: string; error?: string }>;
@@ -30,7 +32,7 @@ export function useResumeApi(): UseResumeApiReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const saveResume = useCallback(async (resumeData: ResumeData & { template: string, userId?: string }): Promise<SaveResumeResponse> => {
+  const saveResume = useCallback(async (resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; userId?: string }): Promise<SaveResumeResponse> => {
     setIsLoading(true);
     setError(null);
 
@@ -40,6 +42,7 @@ export function useResumeApi(): UseResumeApiReturn {
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
         resumeData: JSON.stringify({
           template: resumeData.template,
+          styleSettings: resumeData.styleSettings,
           personalInfo: resumeData.personalInfo,
           experience: resumeData.experience || [],
           education: resumeData.education || [],
@@ -74,7 +77,7 @@ export function useResumeApi(): UseResumeApiReturn {
     }
   }, []);
 
-  const updateResume = useCallback(async (resumeId: string, resumeData: ResumeData & { template: string }): Promise<SaveResumeResponse> => {
+  const updateResume = useCallback(async (resumeId: string, resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings }): Promise<SaveResumeResponse> => {
     setIsLoading(true);
     setError(null);
 
@@ -83,6 +86,7 @@ export function useResumeApi(): UseResumeApiReturn {
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
         resumeData: JSON.stringify({
           template: resumeData.template,
+          styleSettings: resumeData.styleSettings,
           personalInfo: resumeData.personalInfo,
           experience: resumeData.experience || [],
           education: resumeData.education || [],
@@ -134,9 +138,10 @@ export function useResumeApi(): UseResumeApiReturn {
 
       const doc = response.document;
       const parsedResumeData = doc.resumeData ? JSON.parse(doc.resumeData) : {};
-      const resumeData: ResumeData & { template: string; id: string } = {
+      const resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; id: string } = {
         id: doc.$id,
         template: parsedResumeData.template || 'classic',
+        styleSettings: parsedResumeData.styleSettings ? normalizeStyleSettings(parsedResumeData.styleSettings) : undefined,
         personalInfo: parsedResumeData.personalInfo || {
           firstName: '',
           lastName: '',

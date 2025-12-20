@@ -2,6 +2,9 @@
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 
+import type { ResumeStyleSettings } from './templates/templateKit';
+import { DEFAULT_STYLE_SETTINGS } from './templates/templateKit';
+
 export interface ResumeData extends Record<string, unknown>{
   personalInfo: {
     firstName: string;
@@ -60,6 +63,7 @@ export function isTemplateType(value: unknown): value is TemplateType {
 interface ResumeContextType {
   resumeData: ResumeData;
   selectedTemplate: TemplateType;
+  styleSettings: ResumeStyleSettings;
   updateResumeData: (data: Partial<ResumeData>) => void;
   updatePersonalInfo: (data: Partial<ResumeData['personalInfo']>) => void;
   updateProfessionalSummary: (summary: string) => void;
@@ -68,6 +72,8 @@ interface ResumeContextType {
   updateSkills: (skills: ResumeData['skills']) => void;
   updateProjects: (projects: ResumeData['projects']) => void;
   updateCertifications: (certifications: ResumeData['certifications']) => void;
+  updateStyleSettings: (settings: Partial<ResumeStyleSettings>) => void;
+  setStyleSettings: (settings: ResumeStyleSettings) => void;
   setSelectedTemplate: (template: TemplateType) => void;
 }
 
@@ -75,6 +81,7 @@ const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: ReactNode }) {
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('classic');
+  const [styleSettings, setStyleSettings] = useState<ResumeStyleSettings>(DEFAULT_STYLE_SETTINGS);
   const [resumeData, setResumeData] = useState<ResumeData>({
     personalInfo: {
       firstName: '',
@@ -150,10 +157,19 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateStyleSettings = useCallback((settings: Partial<ResumeStyleSettings>) => {
+    setStyleSettings(prev => ({ ...prev, ...settings }));
+  }, []);
+
+  const setStyleSettingsValue = useCallback((settings: ResumeStyleSettings) => {
+    setStyleSettings(settings);
+  }, []);
+
   return (
     <ResumeContext.Provider value={{
       resumeData,
       selectedTemplate,
+      styleSettings,
       updateResumeData,
       updatePersonalInfo,
       updateProfessionalSummary,
@@ -162,6 +178,8 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
       updateSkills,
       updateProjects,
       updateCertifications,
+      updateStyleSettings,
+      setStyleSettings: setStyleSettingsValue,
       setSelectedTemplate,
     }}>
       {children}

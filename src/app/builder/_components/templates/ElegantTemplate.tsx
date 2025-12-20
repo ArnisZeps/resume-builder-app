@@ -1,33 +1,59 @@
 import { ResumeData } from '../ResumeContext';
-import { BASE, COLORS, formatDateRange, formatMonthYear } from './templateKit';
+import { formatDateRange, getTemplateTheme, type ResumeStyleSettings } from './templateKit';
 
-export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
+export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: ResumeData; styleSettings?: ResumeStyleSettings }) {
   const { personalInfo } = resumeData;
+  const { colors, base, line } = getTemplateTheme(styleSettings);
+
+  const headerDivider = {
+    textAlign: 'center',
+    borderBottom: `${line.hairline}px solid ${colors.accent}`,
+    paddingBottom: '14px',
+    marginBottom: '18px',
+  } as const;
+
+  const sectionTitle = {
+    ...base.sectionTitle,
+    textAlign: 'center',
+    letterSpacing: '2px',
+    fontWeight: 400,
+    borderBottom: `${line.hairline}px solid ${colors.divider}`,
+    paddingBottom: '8px',
+    marginBottom: '14px',
+  } as const;
+
+  const itemTitle = {
+    ...base.itemTitle,
+    fontSize: '13px',
+    fontWeight: 600,
+    letterSpacing: '0.5px',
+  } as const;
 
   return (
     <>
-      <div style={{ textAlign: 'center', borderBottom: `1px solid ${COLORS.divider}`, paddingBottom: '14px', marginBottom: '18px' }}>
+      <div style={headerDivider}>
         <h1
           style={{
-            ...BASE.headerName,
+            ...base.headerName,
             fontSize: '34px',
             fontWeight: 600,
             letterSpacing: '1.2px',
             textTransform: 'uppercase',
             margin: '0 0 6px 0',
+            color: colors.textPrimary,
           }}
         >
           {personalInfo.firstName} {personalInfo.lastName}
         </h1>
 
-        <div style={{ fontSize: '11px', color: COLORS.textMuted, letterSpacing: '0.3px' }}>
+        <div style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, letterSpacing: '0.3px' }}>
           {personalInfo.email && <span>{personalInfo.email}</span>}
           {personalInfo.phone && <span> • {personalInfo.phone}</span>}
           {personalInfo.location && <span> • {personalInfo.location}</span>}
         </div>
 
         {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
-          <div style={{ fontSize: '10px', color: COLORS.link, marginTop: '6px' }}>
+          <div style={{ fontSize: '10px', color: colors.accent, marginTop: '6px' }}>
             {personalInfo.website && <span>{personalInfo.website}</span>}
             {personalInfo.linkedin && <span> • {personalInfo.linkedin}</span>}
             {personalInfo.github && <span> • {personalInfo.github}</span>}
@@ -37,13 +63,13 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-          <p style={{ ...BASE.bodyText, fontSize: '12px', maxWidth: '92%', margin: '0 auto' }}>{personalInfo.professionalSummary}</p>
+          <p style={{ ...base.bodyText, fontSize: '12px', maxWidth: '92%', margin: '0 auto' }}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
       {resumeData.experience?.some((exp) => exp.jobTitle || exp.company) && (
         <div style={{ marginBottom: '16px' }}>
-          <h2 style={{ ...BASE.sectionTitle, textAlign: 'center', letterSpacing: '1.6px', fontWeight: 600 }}>
+          <h2 style={{ ...sectionTitle, letterSpacing: '1.6px', fontWeight: 600, borderBottom: `${line.hairline}px solid ${colors.accent}` }}>
             Experience
           </h2>
           {resumeData.experience
@@ -51,11 +77,11 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
             .map((exp, index) => (
               <div key={index} style={{ marginBottom: '14px' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...BASE.itemTitle, fontSize: '12px' }}>{exp.jobTitle}</div>
-                  <div style={{ ...BASE.itemMeta, color: COLORS.textSecondary, marginTop: '2px' }}>
+                  <div style={{ ...base.itemTitle, fontSize: '12px' }}>{exp.jobTitle}</div>
+                  <div style={{ ...base.itemMeta, color: colors.textSecondary, marginTop: '2px' }}>
                     {exp.company}{exp.location && ` • ${exp.location}`}
                   </div>
-                  <div style={{ fontSize: '10px', color: COLORS.textMuted, marginTop: '2px' }}>
+                  <div style={{ fontSize: '10px', color: colors.textMuted, marginTop: '2px' }}>
                     {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                   </div>
                 </div>
@@ -65,7 +91,7 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
                     {exp.responsibilities
                       .filter((r) => r.trim())
                       .map((r, idx) => (
-                        <li key={idx} style={{ ...BASE.bodyText, fontSize: '11px', marginBottom: '3px' }}>
+                        <li key={idx} style={{ ...base.bodyText, fontSize: '11px', marginBottom: '3px' }}>
                           {r}
                         </li>
                       ))}
@@ -79,50 +105,25 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
       {/* Education */}
       {resumeData.education && resumeData.education.length > 0 && resumeData.education.some(edu => edu.degree || edu.institution) && (
         <div style={{ marginBottom: '26px' }}>
-          <h2 style={{ 
-            fontSize: '14px', 
-            fontWeight: '300', 
-            color: '#1F2937', 
-            marginBottom: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            paddingBottom: '8px'
-          }}>
+          <h2 style={sectionTitle}>
             Education
           </h2>
           {resumeData.education.map((edu, index) => (
             (edu.degree || edu.institution) && (
               <div key={index} style={{ marginBottom: '14px', textAlign: 'center' }}>
-                <h3 style={{ 
-                  fontSize: '13px', 
-                  fontWeight: '600', 
-                  color: '#111827', 
-                  margin: '0 0 2px 0',
-                  letterSpacing: '0.5px'
-                }}>
+                <h3 style={itemTitle}>
                   {edu.degree}
                 </h3>
-                <p style={{ 
-                  fontSize: '11px', 
-                  color: '#6B7280', 
-                  margin: '2px 0',
-                  fontStyle: 'italic'
-                }}>
+                <p style={{ fontSize: '11px', color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
                   {edu.institution}{edu.location && ` • ${edu.location}`}
                 </p>
                 {edu.graduationDate && (
-                  <p style={{ fontSize: '10px', color: '#9CA3AF', margin: '4px 0 0 0' }}>
+                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '4px 0 0 0' }}>
                     {new Date(edu.graduationDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 )}
                 {edu.gpa && (
-                  <p style={{ 
-                    fontSize: '10px', 
-                    color: '#9CA3AF', 
-                    margin: '2px 0 0 0'
-                  }}>
+                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0 0 0' }}>
                     GPA: {edu.gpa}
                   </p>
                 )}
@@ -135,17 +136,7 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
       {/* Skills */}
       {resumeData.skills && resumeData.skills.length > 0 && resumeData.skills.some(skill => skill.category || skill.items.some(item => item.trim())) && (
         <div style={{ marginBottom: '26px' }}>
-          <h2 style={{ 
-            fontSize: '14px', 
-            fontWeight: '300', 
-            color: '#1F2937', 
-            marginBottom: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            paddingBottom: '8px'
-          }}>
+          <h2 style={sectionTitle}>
             Skills & Expertise
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center' }}>
@@ -153,22 +144,11 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
               (skillGroup.category || skillGroup.items.some(item => item.trim())) && (
                 <div key={index}>
                   {skillGroup.category && (
-                    <h3 style={{ 
-                      fontSize: '11px', 
-                      fontWeight: '600', 
-                      color: '#6B7280',
-                      margin: '0 0 4px 0',
-                      letterSpacing: '0.5px'
-                    }}>
+                    <h3 style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, margin: '0 0 4px 0', letterSpacing: '0.5px' }}>
                       {skillGroup.category}
                     </h3>
                   )}
-                  <p style={{ 
-                    fontSize: '11px', 
-                    color: '#374151', 
-                    lineHeight: '1.6',
-                    margin: 0
-                  }}>
+                  <p style={{ ...base.bodyText, fontSize: '11px', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
                     {skillGroup.items.filter(item => item.trim()).join(' • ')}
                   </p>
                 </div>
@@ -181,32 +161,22 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
       {/* Projects */}
       {resumeData.projects && resumeData.projects.length > 0 && resumeData.projects.some(project => project.title || project.description) && (
         <div style={{ marginBottom: '26px' }}>
-          <h2 style={{ 
-            fontSize: '14px', 
-            fontWeight: '300', 
-            color: '#1F2937', 
-            marginBottom: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            paddingBottom: '8px'
-          }}>
+          <h2 style={sectionTitle}>
             Notable Projects
           </h2>
           {resumeData.projects.map((project, index) => (
             (project.title || project.description) && (
               <div key={index} style={{ marginBottom: '16px', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0', letterSpacing: '0.5px' }}>
+                <h3 style={{ ...base.itemTitle, fontSize: '12px', fontWeight: 600, letterSpacing: '0.5px', margin: '0 0 4px 0' }}>
                   {project.title}
                 </h3>
                 {project.description && (
-                  <p style={{ fontSize: '11px', color: '#4B5563', lineHeight: '1.7', margin: '4px 0', fontStyle: 'italic' }}>
+                  <p style={{ ...base.bodyText, fontSize: '11px', lineHeight: '1.7', margin: '4px 0', fontStyle: 'italic', textAlign: 'center' }}>
                     {project.description}
                   </p>
                 )}
                 {project.technologies && project.technologies.length > 0 && project.technologies.some(tech => tech.trim()) && (
-                  <p style={{ fontSize: '10px', color: '#9CA3AF', margin: '6px 0 0 0' }}>
+                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '6px 0 0 0' }}>
                     {project.technologies.filter(tech => tech.trim()).join(' • ')}
                   </p>
                 )}
@@ -219,30 +189,20 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
       {/* Certifications */}
       {resumeData.certifications && resumeData.certifications.length > 0 && resumeData.certifications.some(cert => cert.name || cert.issuer) && (
         <div style={{ marginBottom: '26px' }}>
-          <h2 style={{ 
-            fontSize: '14px', 
-            fontWeight: '300', 
-            color: '#1F2937', 
-            marginBottom: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            borderBottom: '1px solid #E5E7EB',
-            paddingBottom: '8px'
-          }}>
+          <h2 style={sectionTitle}>
             Certifications
           </h2>
           {resumeData.certifications.map((cert, index) => (
             (cert.name || cert.issuer) && (
               <div key={index} style={{ marginBottom: '12px', textAlign: 'center' }}>
-                <h3 style={{ fontSize: '11px', fontWeight: '600', color: '#111827', margin: '0 0 2px 0', letterSpacing: '0.5px' }}>
+                <h3 style={{ ...base.itemTitle, fontSize: '11px', fontWeight: 600, margin: '0 0 2px 0', letterSpacing: '0.5px' }}>
                   {cert.name}
                 </h3>
-                <p style={{ fontSize: '10px', color: '#6B7280', margin: '2px 0', fontStyle: 'italic' }}>
+                <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
                   {cert.issuer}
                 </p>
                 {cert.date && (
-                  <p style={{ fontSize: '10px', color: '#9CA3AF', margin: '2px 0 0 0' }}>
+                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0 0 0' }}>
                     {new Date(cert.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 )}
@@ -255,10 +215,10 @@ export function ElegantTemplate({ resumeData }: { resumeData: ResumeData }) {
       {/* Empty State */}
       {!resumeData.personalInfo.firstName && !resumeData.personalInfo.lastName && (
         <div style={{ textAlign: 'center', padding: '80px 40px' }}>
-          <h3 style={{ fontSize: '24px', fontWeight: '300', color: '#1F2937', marginBottom: '12px', letterSpacing: '2px', textTransform: 'uppercase' }}>
+          <h3 style={{ fontSize: '24px', fontWeight: 300, color: colors.textPrimary, marginBottom: '12px', letterSpacing: '2px', textTransform: 'uppercase' }}>
             Elegant Resume
           </h3>
-          <p style={{ color: '#6B7280', margin: 0, fontSize: '12px', lineHeight: '1.8', fontStyle: 'italic' }}>
+          <p style={{ color: colors.textMuted, margin: 0, fontSize: '12px', lineHeight: '1.8', fontStyle: 'italic' }}>
             Refined and sophisticated design with centered layout.<br />
             Perfect for executive and senior-level positions.
           </p>
