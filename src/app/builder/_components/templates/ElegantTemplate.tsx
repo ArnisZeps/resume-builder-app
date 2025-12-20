@@ -66,7 +66,7 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
         </div>
 
         {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
-          <div style={{ fontSize: '10px', color: colors.accent, marginTop: '6px' }}>
+          <div style={{ fontSize: base.itemMeta.fontSize, color: colors.accent, marginTop: '6px' }}>
             {personalInfo.website && <span>{personalInfo.website}</span>}
             {personalInfo.linkedin && <span> • {personalInfo.linkedin}</span>}
             {personalInfo.github && <span> • {personalInfo.github}</span>}
@@ -76,7 +76,7 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
 
       {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-          <p style={{ ...base.bodyText, fontSize: '12px', maxWidth: '92%', margin: '0 auto' }}>{personalInfo.professionalSummary}</p>
+          <p style={{ ...base.bodyText, maxWidth: '92%', margin: '0 auto' }}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
@@ -90,11 +90,11 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
             .map((exp, index) => (
               <div key={index} style={{ marginBottom: '14px' }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ ...base.itemTitle, fontSize: '12px' }}>{exp.jobTitle}</div>
+                  <div style={base.itemTitle}>{exp.jobTitle}</div>
                   <div style={{ ...base.itemMeta, color: colors.textSecondary, marginTop: '2px' }}>
                     {exp.company}{exp.location && ` • ${exp.location}`}
                   </div>
-                  <div style={{ fontSize: '10px', color: colors.textMuted, marginTop: '2px' }}>
+                  <div style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, marginTop: '2px' }}>
                     {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                   </div>
                 </div>
@@ -104,7 +104,7 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
                     {exp.responsibilities
                       .filter((r) => r.trim())
                       .map((r, idx) => (
-                        <li key={idx} style={{ ...base.bodyText, fontSize: '11px', marginBottom: '3px' }}>
+                        <li key={idx} style={{ ...base.bodyText, marginBottom: '3px' }}>
                           {r}
                         </li>
                       ))}
@@ -127,16 +127,16 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
                 <h3 style={itemTitle}>
                   {edu.degree}
                 </h3>
-                <p style={{ fontSize: '11px', color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
+                <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
                   {edu.institution}{edu.location && ` • ${edu.location}`}
                 </p>
                 {edu.graduationDate && (
-                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '4px 0 0 0' }}>
+                  <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '4px 0 0 0' }}>
                     {new Date(edu.graduationDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 )}
                 {edu.gpa && (
-                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0 0 0' }}>
+                  <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '2px 0 0 0' }}>
                     GPA: {edu.gpa}
                   </p>
                 )}
@@ -157,11 +157,11 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
               (skillGroup.category || skillGroup.items.some(item => item.trim())) && (
                 <div key={index}>
                   {skillGroup.category && (
-                    <h3 style={{ fontSize: '11px', fontWeight: 600, color: colors.textMuted, margin: '0 0 4px 0', letterSpacing: '0.5px' }}>
+                    <h3 style={{ ...base.itemMeta, fontWeight: 600, color: colors.textMuted, margin: '0 0 4px 0', letterSpacing: '0.5px' }}>
                       {skillGroup.category}
                     </h3>
                   )}
-                  <p style={{ ...base.bodyText, fontSize: '11px', lineHeight: '1.6', margin: 0, textAlign: 'center' }}>
+                  <p style={{ ...base.bodyText, margin: 0, textAlign: 'center' }}>
                     {skillGroup.items.filter(item => item.trim()).join(' • ')}
                   </p>
                 </div>
@@ -184,12 +184,12 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
                   {project.title}
                 </h3>
                 {project.description && (
-                  <p style={{ ...base.bodyText, fontSize: '11px', lineHeight: '1.7', margin: '4px 0', fontStyle: 'italic', textAlign: 'center' }}>
+                  <p style={{ ...base.bodyText, margin: '4px 0', fontStyle: 'italic', textAlign: 'center' }}>
                     {project.description}
                   </p>
                 )}
                 {project.technologies && project.technologies.length > 0 && project.technologies.some(tech => tech.trim()) && (
-                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '6px 0 0 0' }}>
+                  <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '6px 0 0 0' }}>
                     {project.technologies.filter(tech => tech.trim()).join(' • ')}
                   </p>
                 )}
@@ -211,11 +211,11 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
                 <h3 style={{ ...base.itemTitle, fontSize: '11px', fontWeight: 600, margin: '0 0 2px 0', letterSpacing: '0.5px' }}>
                   {cert.name}
                 </h3>
-                <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
+                <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '2px 0', fontStyle: 'italic' }}>
                   {cert.issuer}
                 </p>
                 {cert.date && (
-                  <p style={{ fontSize: '10px', color: colors.textMuted, margin: '2px 0 0 0' }}>
+                  <p style={{ ...base.itemMeta, color: colors.textMuted, margin: '2px 0 0 0' }}>
                     {new Date(cert.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </p>
                 )}
@@ -231,7 +231,7 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
           <h3 style={{ fontSize: '24px', fontWeight: 300, color: colors.textPrimary, marginBottom: '12px', letterSpacing: '2px', textTransform: 'uppercase' }}>
             Elegant Resume
           </h3>
-          <p style={{ color: colors.textMuted, margin: 0, fontSize: '12px', lineHeight: '1.8', fontStyle: 'italic' }}>
+          <p style={{ ...base.bodyText, color: colors.textMuted, margin: 0, fontStyle: 'italic' }}>
             Refined and sophisticated design with centered layout.<br />
             Perfect for executive and senior-level positions.
           </p>

@@ -283,11 +283,7 @@ export default function ResumeBuilderForm() {
                   <div className="text-xs text-white/60 mt-1">Used for section dividers, highlights and links</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div
-                    className="h-5 w-5 rounded-full border border-white/20"
-                    style={{ backgroundColor: styleSettings.accentColor }}
-                    aria-label="Current accent preview"
-                  />
+
                   <input
                     type="color"
                     value={styleSettings.accentColor}
@@ -410,7 +406,6 @@ export default function ResumeBuilderForm() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-sm font-semibold text-white">Profile photo</div>
-                <div className="text-xs text-white/60 mt-1">Optional. Used on templates that support it.</div>
               </div>
               {resumeData.personalInfo.photoFileId && (
                 <button

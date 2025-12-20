@@ -27,7 +27,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
     display: 'flex',
     flexWrap: 'wrap',
     gap: '10px',
-    fontSize: '11px',
+    fontSize: base.itemMeta.fontSize,
     color: 'rgba(255, 255, 255, 0.88)',
     marginTop: '8px',
   } as const;
@@ -36,7 +36,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
     display: 'flex',
     flexWrap: 'wrap',
     gap: '10px',
-    fontSize: '10px',
+    fontSize: base.itemMeta.fontSize,
     color: 'rgba(255, 255, 255, 0.92)',
     marginTop: '6px',
   } as const;
@@ -88,7 +88,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
       {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
         <div style={{ marginBottom: '16px' }}>
           <h2 style={sectionTitle}>Summary</h2>
-          <p style={{ ...base.bodyText, fontSize: '12px' }}>{personalInfo.professionalSummary}</p>
+          <p style={base.bodyText}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
@@ -101,7 +101,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
               <div key={index} style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
                   <h3 style={{ ...base.itemTitle, fontWeight: 800 }}>{exp.jobTitle}</h3>
-                  <span style={{ fontSize: '10px', color: colors.textMuted, whiteSpace: 'nowrap', fontWeight: 700 }}>
+                  <span style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, whiteSpace: 'nowrap', fontWeight: 700 }}>
                     {formatDateRange(exp.startDate, exp.endDate, exp.current)}
                   </span>
                 </div>
@@ -113,7 +113,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
                     {exp.responsibilities
                       .filter((r) => r.trim())
                       .map((r, idx) => (
-                        <li key={idx} style={{ ...base.bodyText, fontSize: '11px', marginBottom: '3px' }}>
+                        <li key={idx} style={{ ...base.bodyText, marginBottom: '3px' }}>
                           {r}
                         </li>
                       ))}
@@ -133,7 +133,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
                   <h3 style={{ ...base.itemTitle, fontSize: '12px', fontWeight: 800 }}>{edu.degree}</h3>
-                  <span style={{ fontSize: '10px', color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(edu.graduationDate)}</span>
+                  <span style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(edu.graduationDate)}</span>
                 </div>
                 <div style={{ ...base.itemMeta, color: colors.textSecondary, fontWeight: 700 }}>
                   {edu.institution}{edu.location && ` • ${edu.location}`}{edu.gpa && ` • GPA: ${edu.gpa}`}
@@ -151,7 +151,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
             .map((g, index) => (
               <div key={index} style={{ marginBottom: '8px' }}>
                 {g.category && <div style={{ fontSize: base.itemMeta.fontSize, fontWeight: 800, color: colors.textPrimary, marginBottom: '2px' }}>{g.category}</div>}
-                <div style={{ ...base.bodyText, fontSize: '11px' }}>{g.items?.filter((i) => i.trim()).join(', ')}</div>
+                <div style={base.bodyText}>{g.items?.filter((i) => i.trim()).join(', ')}</div>
               </div>
             ))}
         </div>
@@ -166,12 +166,12 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
               <div key={index} style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
                   <h3 style={{ ...base.itemTitle, fontWeight: 800 }}>{p.title}</h3>
-                  <span style={{ fontSize: '10px', color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatDateRange(p.startDate, p.endDate, false)}</span>
+                  <span style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatDateRange(p.startDate, p.endDate, false)}</span>
                 </div>
-                {p.url && <div style={{ fontSize: '10px', color: colors.accent, marginTop: '2px' }}>{p.url}</div>}
-                {p.description && <p style={{ ...base.bodyText, fontSize: '11px', marginTop: '4px' }}>{p.description}</p>}
+                {p.url && <div style={{ fontSize: base.itemMeta.fontSize, color: colors.accent, marginTop: '2px' }}>{p.url}</div>}
+                {p.description && <p style={{ ...base.bodyText, marginTop: '4px' }}>{p.description}</p>}
                 {p.technologies?.some((t) => t.trim()) && (
-                  <div style={{ fontSize: '10px', color: colors.textMuted, marginTop: '4px' }}>
+                  <div style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, marginTop: '4px' }}>
                     {p.technologies.filter((t) => t.trim()).join(', ')}
                   </div>
                 )}
@@ -189,7 +189,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
               <div key={index} style={{ marginBottom: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
                   <h3 style={{ ...base.itemTitle, fontSize: '12px', fontWeight: 800 }}>{c.name}</h3>
-                  <span style={{ fontSize: '10px', color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(c.date)}</span>
+                  <span style={{ fontSize: base.itemMeta.fontSize, color: colors.textMuted, whiteSpace: 'nowrap' }}>{formatMonthYear(c.date)}</span>
                 </div>
                 <div style={{ ...base.itemMeta, color: colors.textSecondary, fontWeight: 700 }}>{c.issuer}{c.url && ` • ${c.url}`}</div>
               </div>
