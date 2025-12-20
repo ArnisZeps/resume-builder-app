@@ -7,6 +7,7 @@ import ResumePreview from "./_components/ResumePreview";
 import { ResumeProvider, useResumeContext } from "./_components/ResumeContext";
 import { useEffect, useState } from "react";
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { account } from "@/lib/appwrite";
 
 export default function ResumeBuilderPage() {
   return (
@@ -36,10 +37,13 @@ function ResumeBuilderInner() {
       const lastName = resumeData.personalInfo.lastName || '';
       const title = `${firstName}${lastName ? ` ${lastName}` : ''} Resume`;
 
+      const jwt = await account.createJWT();
+
       const res = await fetch('/api/resume/pdf', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Appwrite-JWT': jwt.jwt,
         },
         body: JSON.stringify({
           pages: pagesForExport,
@@ -169,7 +173,6 @@ function ResumeBuilderInner() {
                 onPagesChange={setPagesForExport}
               />
 
-              {/* Floating Pagination Controls */}
               <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
                 <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-md border border-black/10 rounded-full shadow-2xl text-sm sm:gap-3 sm:px-6 sm:py-3 sm:text-base">
                   <button

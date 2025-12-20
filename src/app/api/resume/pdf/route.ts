@@ -7,6 +7,8 @@ export const runtime = 'nodejs';
 type PdfRequestBody = {
   pages: string[];
   title?: string;
+  // Optional fallback if the client can't send headers.
+  appwriteJwt?: string;
 };
 
 const A4_WIDTH = 794;
@@ -15,7 +17,6 @@ const PADDING = 60;
 
 const APPWRITE_ENDPOINT = (process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1').replace(/\/$/, '');
 const APPWRITE_PROJECT_ID = process.env.APPWRITE_PROJECT_ID || process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
-const APPWRITE_API_KEY = process.env.APPWRITE_API_KEY || process.env.APPWRITE_KEY || '';
 
 function getAppwriteProjectIdForUrl(src: string) {
   try {
@@ -38,7 +39,7 @@ function isAppwriteFileViewUrl(src: string) {
   }
 }
 
-async function inlineAppwriteImages(html: string) {
+async function inlineAppwriteImages(html: string, appwriteJwt?: string) {
   // Only target Appwrite file URLs. The common failure mode is that the browser (user) can
   // see the image due to session cookies, but Puppeteer can't (no cookies), resulting in
   // missing photos in the PDF.
@@ -67,11 +68,8 @@ async function inlineAppwriteImages(html: string) {
           Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
         };
 
-        // Appwrite API key auth requires a matching project id header.
-        // Prefer the project id from the URL query param if present.
         if (projectId) headers['X-Appwrite-Project'] = projectId;
-        // If file access requires auth, use a server API key (kept server-side).
-        if (APPWRITE_API_KEY) headers['X-Appwrite-Key'] = APPWRITE_API_KEY;
+        if (appwriteJwt) headers['X-Appwrite-JWT'] = appwriteJwt;
 
         const res = await fetch(src, { headers, cache: 'no-store' });
         if (!res.ok) {
@@ -185,6 +183,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
+  const appwriteJwtHeader = req.headers.get('x-appwrite-jwt')?.trim();
+  const appwriteJwtBody = typeof body?.appwriteJwt === 'string' ? body.appwriteJwt.trim() : '';
+  const appwriteJwt = appwriteJwtHeader || appwriteJwtBody;
+
   const pages = body?.pages;
   if (!Array.isArray(pages) || pages.length === 0 || pages.some((p) => typeof p !== 'string')) {
     return NextResponse.json({ error: '`pages` must be a non-empty string[]' }, { status: 400 });
@@ -209,10 +211,9 @@ export async function POST(req: NextRequest) {
       await page.setViewport({ width: A4_WIDTH, height: A4_HEIGHT });
 
       let html = buildHtml(pages, title);
-      html = await inlineAppwriteImages(html);
+      html = await inlineAppwriteImages(html, appwriteJwt);
       await page.setContent(html);
 
-      // Ensure <img> elements finish loading before PDF generation.
       await page.evaluate(async () => {
         const images = Array.from(document.images);
         await Promise.all(

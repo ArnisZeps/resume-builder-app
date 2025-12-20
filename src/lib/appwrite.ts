@@ -182,8 +182,7 @@ export const appwriteStorage = {
             if (!bucketId) throw new Error('Missing Appwrite profile picture bucket id');
 
             const permissions = [
-                // Public read so the image can render in previews/PDF without needing auth in the browser context.
-                Permission.read(Role.any()),
+                Permission.read(Role.user(userId)),
                 Permission.update(Role.user(userId)),
                 Permission.delete(Role.user(userId)),
             ];
