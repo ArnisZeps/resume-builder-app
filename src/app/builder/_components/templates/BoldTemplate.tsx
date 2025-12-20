@@ -4,21 +4,63 @@ import { BASE, COLORS, formatDateRange, formatMonthYear } from './templateKit';
 export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
   const { personalInfo } = resumeData;
 
+  const headerWrap = {
+    backgroundColor: COLORS.headerBgDark,
+    padding: '18px 18px 14px',
+    margin: '-18px -18px 16px',
+  } as const;
+
+  const headerName = {
+    ...BASE.headerName,
+    fontSize: '34px',
+    fontWeight: 900,
+    letterSpacing: '0.6px',
+    color: COLORS.white,
+    margin: 0,
+  } as const;
+
+  const headerMetaRow = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px',
+    fontSize: '11px',
+    color: 'rgba(255, 255, 255, 0.88)',
+    marginTop: '8px',
+  } as const;
+
+  const headerLinksRow = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px',
+    fontSize: '10px',
+    color: 'rgba(255, 255, 255, 0.92)',
+    marginTop: '6px',
+  } as const;
+
+  const sectionTitle = {
+    ...BASE.sectionTitle,
+    borderBottom: 'none',
+    backgroundColor: COLORS.subtleBg,
+    padding: '7px 10px',
+    borderLeft: `5px solid ${COLORS.textPrimary}`,
+    marginBottom: '10px',
+  } as const;
+
   return (
     <>
-      <div style={{ borderBottom: `3px solid ${COLORS.textPrimary}`, paddingBottom: '12px', marginBottom: '16px' }}>
-        <h1 style={{ ...BASE.headerName, fontSize: '32px', fontWeight: 900, letterSpacing: '0.6px' }}>
+      <div style={headerWrap}>
+        <h1 style={headerName}>
           {personalInfo.firstName} {personalInfo.lastName}
         </h1>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '11px', color: COLORS.textMuted, marginTop: '6px' }}>
+        <div style={headerMetaRow}>
           {personalInfo.email && <span>{personalInfo.email}</span>}
           {personalInfo.phone && <span>• {personalInfo.phone}</span>}
           {personalInfo.location && <span>• {personalInfo.location}</span>}
         </div>
 
         {(personalInfo.website || personalInfo.linkedin || personalInfo.github) && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', fontSize: '10px', color: COLORS.link, marginTop: '6px' }}>
+          <div style={headerLinksRow}>
             {personalInfo.website && <span>{personalInfo.website}</span>}
             {personalInfo.linkedin && <span>• {personalInfo.linkedin}</span>}
             {personalInfo.github && <span>• {personalInfo.github}</span>}
@@ -28,14 +70,14 @@ export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {personalInfo.professionalSummary && personalInfo.professionalSummary.trim() && (
         <div style={{ marginBottom: '16px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Summary</h2>
+          <h2 style={sectionTitle}>Summary</h2>
           <p style={{ ...BASE.bodyText, fontSize: '12px' }}>{personalInfo.professionalSummary}</p>
         </div>
       )}
 
       {resumeData.experience?.some((exp) => exp.jobTitle || exp.company) && (
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Experience</h2>
+          <h2 style={sectionTitle}>Experience</h2>
           {resumeData.experience
             .filter((exp) => exp.jobTitle || exp.company)
             .map((exp, index) => (
@@ -67,7 +109,7 @@ export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.education?.some((edu) => edu.degree || edu.institution) && (
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Education</h2>
+          <h2 style={sectionTitle}>Education</h2>
           {resumeData.education
             .filter((edu) => edu.degree || edu.institution)
             .map((edu, index) => (
@@ -86,7 +128,7 @@ export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.skills?.some((g) => g.category || g.items?.some((i) => i.trim())) && (
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Skills</h2>
+          <h2 style={sectionTitle}>Skills</h2>
           {resumeData.skills
             .filter((g) => g.category || g.items?.some((i) => i.trim()))
             .map((g, index) => (
@@ -100,7 +142,7 @@ export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.projects?.some((p) => p.title || p.description) && (
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Projects</h2>
+          <h2 style={sectionTitle}>Projects</h2>
           {resumeData.projects
             .filter((p) => p.title || p.description)
             .map((p, index) => (
@@ -123,7 +165,7 @@ export function BoldTemplate({ resumeData }: { resumeData: ResumeData }) {
 
       {resumeData.certifications?.some((c) => c.name || c.issuer) && (
         <div style={{ marginBottom: '18px' }}>
-          <h2 style={{ ...BASE.sectionTitle, borderBottom: `2px solid ${COLORS.textPrimary}`, paddingBottom: '4px' }}>Certifications</h2>
+          <h2 style={sectionTitle}>Certifications</h2>
           {resumeData.certifications
             .filter((c) => c.name || c.issuer)
             .map((c, index) => (

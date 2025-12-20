@@ -50,7 +50,12 @@ export interface ResumeData extends Record<string, unknown>{
   }>;
 }
 
-export type TemplateType = 'classic' | 'modern' | 'minimal' | 'executive' | 'compact' | 'twoColumn' | 'creative' | 'tech' | 'elegant' | 'bold';
+export const TEMPLATE_KEYS = ['classic', 'modern', 'elegant', 'bold'] as const;
+export type TemplateType = (typeof TEMPLATE_KEYS)[number];
+
+export function isTemplateType(value: unknown): value is TemplateType {
+  return typeof value === 'string' && (TEMPLATE_KEYS as readonly string[]).includes(value);
+}
 
 interface ResumeContextType {
   resumeData: ResumeData;

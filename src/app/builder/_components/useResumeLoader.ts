@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useResumeApi } from '@/hooks/useResumeApi';
-import { useResumeContext, TemplateType } from './ResumeContext';
+import { isTemplateType, useResumeContext } from './ResumeContext';
 
 export function useResumeLoader() {
   const searchParams = useSearchParams();
@@ -35,7 +35,8 @@ export function useResumeLoader() {
             projects: response.data.projects,
             certifications: response.data.certifications,
           });
-          setSelectedTemplate(response.data.template as TemplateType);
+          const nextTemplate = isTemplateType(response.data.template) ? response.data.template : 'classic';
+          setSelectedTemplate(nextTemplate);
           setHasLoadedResume(true);
         } else {
           const errorMsg = response.error || 'Failed to load resume';

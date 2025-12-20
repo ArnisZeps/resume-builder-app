@@ -232,7 +232,7 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     return () => clearTimeout(timer);
   }, [resumeData, selectedTemplate, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
 
-  const SelectedTemplate = templates[selectedTemplate];
+  const SelectedTemplate = templates[selectedTemplate] ?? templates.classic;
 
   const currentPageContent = pages[currentPage - 1] || '';
 
