@@ -21,6 +21,7 @@ export function getProfilePicturePreviewUrl(fileId: string, size = 160) {
     if (!bucketId || !projectId || !fileId) return '';
 
     const url = new URL(`${endpoint}/storage/buckets/${bucketId}/files/${fileId}/view`);
+    console.log(url.toString());
     url.searchParams.set('project', projectId);
     void size;
     return url.toString();
@@ -181,13 +182,25 @@ export const appwriteStorage = {
             const bucketId = PROFILE_PICTURES_BUCKET_ID;
             if (!bucketId) throw new Error('Missing Appwrite profile picture bucket id');
 
+            // Appwrite Storage doesn't have real folders. If you want a "userId prefix" for organization,
+            // the most compatible approach is to prefix the uploaded filename.
+            // Note: Some systems may sanitize '/' in filenames; the prefix still remains useful for grouping.
+            const prefixedFileName = `${userId}/${file.name || 'profile-picture'}`;
+            let fileToUpload: File = file;
+            try {
+                fileToUpload = new File([file], prefixedFileName, { type: file.type, lastModified: file.lastModified });
+            } catch {
+                // If File constructor isn't available (older browsers), fall back to the original file.
+                fileToUpload = file;
+            }
+
             const permissions = [
                 Permission.read(Role.user(userId)),
                 Permission.update(Role.user(userId)),
                 Permission.delete(Role.user(userId)),
             ];
 
-            const response = await storage.createFile(bucketId, ID.unique(), file, permissions);
+            const response = await storage.createFile(bucketId, ID.unique(), fileToUpload, permissions);
             return { success: true, file: response };
         } catch (error: unknown) {
             console.error('Upload profile picture error:', error);

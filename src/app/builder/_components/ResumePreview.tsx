@@ -3,6 +3,7 @@
 import { useResumeContext } from './ResumeContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { templates } from './templates';
+import { account } from '@/lib/appwrite';
 
 interface ResumePreviewProps {
   currentPage?: number;
@@ -18,6 +19,8 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
   const fragmentMeasureRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [pages, setPages] = useState<string[]>(['']);
+  const inlineCacheRef = useRef<Map<string, string>>(new Map());
+  const inlineJobRef = useRef(0);
 
   const A4_WIDTH = 794;
   const A4_HEIGHT = 1123;
@@ -139,8 +142,95 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
     return fragments.length > 0 ? fragments : [element.outerHTML];
   }, [getOuterHeight]);
 
+  const inlineAppwriteImages = useCallback(async (htmlPages: string[]) => {
+    const endpoint = (process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1').replace(/\/$/, '');
+    const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
+    const imgSrcRegex = /<img\b[^>]*?\bsrc=("|')([^"']+?)\1/gi;
+
+    const isAppwriteFileViewUrl = (src: string) => {
+      try {
+        const url = new URL(src);
+        if (!url.href.startsWith(endpoint)) return false;
+        return /\/storage\/buckets\/.+\/files\/.+\/(view|download)\b/.test(url.pathname);
+      } catch {
+        return false;
+      }
+    };
+
+    const sources = new Set<string>();
+    for (const html of htmlPages) {
+      let match: RegExpExecArray | null;
+      imgSrcRegex.lastIndex = 0;
+      while ((match = imgSrcRegex.exec(html)) !== null) {
+        const src = match[2];
+        if (!src) continue;
+        if (src.startsWith('data:')) continue;
+        if (!/^https?:\/\//i.test(src)) continue;
+        if (!isAppwriteFileViewUrl(src)) continue;
+        sources.add(src);
+      }
+    }
+
+    if (sources.size === 0) return htmlPages;
+
+    let jwt: string | undefined;
+    try {
+      const token = await account.createJWT();
+      jwt = token.jwt;
+    } catch {
+      // If not logged in or session expired, keep original URLs.
+      return htmlPages;
+    }
+
+    const blobToDataUrl = (blob: Blob) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read blob as data URL'));
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.readAsDataURL(blob);
+      });
+
+    await Promise.all(
+      Array.from(sources).map(async (src) => {
+        if (inlineCacheRef.current.has(src)) return;
+        try {
+          const headers: Record<string, string> = {
+            Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+          };
+          if (projectId) headers['X-Appwrite-Project'] = projectId;
+          if (jwt) headers['X-Appwrite-JWT'] = jwt;
+
+          const res = await fetch(src, { headers, cache: 'no-store' });
+          if (!res.ok) return;
+
+          const contentLength = res.headers.get('content-length');
+          if (contentLength && Number(contentLength) > 5_000_000) return;
+
+          const blob = await res.blob();
+          const dataUrl = await blobToDataUrl(blob);
+          if (!dataUrl.startsWith('data:')) return;
+          inlineCacheRef.current.set(src, dataUrl);
+        } catch {
+          // Ignore failures; keep original URL.
+        }
+      })
+    );
+
+    // Replace sources in every page.
+    return htmlPages.map((html) => {
+      imgSrcRegex.lastIndex = 0;
+      return html.replace(imgSrcRegex, (full, quote, src) => {
+        const next = inlineCacheRef.current.get(src);
+        if (!next) return full;
+        return full.replace(src, next);
+      });
+    });
+  }, []);
+
   useEffect(() => {
     if (!contentRef.current) return;
+
+    const jobId = ++inlineJobRef.current;
 
     const timer = setTimeout(() => {
       const elements = Array.from(contentRef.current!.children) as HTMLElement[];
@@ -214,23 +304,31 @@ export default function ResumePreview({ currentPage: controlledCurrentPage, onCu
       flushPage();
 
       const nextPages = pageContents.length > 0 ? pageContents : [''];
-      setPages(nextPages);
-      if (onPagesChange) {
-        onPagesChange(nextPages);
-      }
 
-      const nextTotalPages = Math.max(nextPages.length, 1);
-      if (onTotalPagesChange) {
-        onTotalPagesChange(nextTotalPages);
-      }
+      // Inline Appwrite images client-side so private images render even when cross-site cookies are blocked,
+      // and so exported HTML is self-contained for server-side PDF generation.
+      void (async () => {
+        const inlinedPages = await inlineAppwriteImages(nextPages);
+        if (inlineJobRef.current !== jobId) return;
 
-      if (currentPage > nextTotalPages) {
-        setCurrentPage(1);
-      }
+        setPages(inlinedPages);
+        if (onPagesChange) {
+          onPagesChange(inlinedPages);
+        }
+
+        const nextTotalPages = Math.max(inlinedPages.length, 1);
+        if (onTotalPagesChange) {
+          onTotalPagesChange(nextTotalPages);
+        }
+
+        if (currentPage > nextTotalPages) {
+          setCurrentPage(1);
+        }
+      })();
     }, 100); // Debounce to avoid excessive recalculation
 
     return () => clearTimeout(timer);
-  }, [resumeData, selectedTemplate, styleSettings, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren]);
+  }, [resumeData, selectedTemplate, styleSettings, CONTENT_HEIGHT, currentPage, onPagesChange, onTotalPagesChange, getOuterHeight, measureHtmlFragmentHeight, setCurrentPage, splitElementByChildren, inlineAppwriteImages]);
 
   const SelectedTemplate = templates[selectedTemplate] ?? templates.classic;
 

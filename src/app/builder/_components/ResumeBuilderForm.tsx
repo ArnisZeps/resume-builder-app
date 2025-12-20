@@ -13,8 +13,7 @@ import SkillsSection from "./sections/SkillsSection";
 import ProjectsSection from "./sections/ProjectsSection";
 import CertificationsSection from "./sections/CertificationsSection";
 import { useResumeApi } from "@/hooks/useResumeApi";
-import { appwriteAuth } from "@/lib/appwrite";
-import { getProfilePicturePreviewUrl } from "@/lib/appwrite";
+import { account, appwriteAuth, getProfilePicturePreviewUrl } from "@/lib/appwrite";
 import { useResumeLoader } from "./useResumeLoader";
 import { useDebouncedFormSync } from "@/hooks/useDebouncedFormSync";
 
@@ -103,6 +102,7 @@ export default function ResumeBuilderForm() {
   const [hasResetForm, setHasResetForm] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoPreviewDataUrl, setPhotoPreviewDataUrl] = useState<string | null>(null);
 
   const form = useForm<ResumeFormData>({
     resolver: zodResolver(resumeFormSchema),
@@ -134,6 +134,64 @@ export default function ResumeBuilderForm() {
   }, [updatePersonalInfo]);
 
   useDebouncedFormSync(form.watch, syncFormToContext, 300, hasResetForm || !isEditing);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fileId = resumeData.personalInfo.photoFileId;
+    if (!fileId) {
+      setPhotoPreviewDataUrl(null);
+      return;
+    }
+
+    const src = getProfilePicturePreviewUrl(fileId, 160);
+    const projectId = process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID || '';
+
+    const blobToDataUrl = (blob: Blob) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Failed to read blob as data URL'));
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.readAsDataURL(blob);
+      });
+
+    void (async () => {
+      try {
+        const token = await account.createJWT();
+        const headers: Record<string, string> = {
+          Accept: 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+          'X-Appwrite-JWT': token.jwt,
+        };
+        if (projectId) headers['X-Appwrite-Project'] = projectId;
+
+        const res = await fetch(src, { headers, cache: 'no-store' });
+        if (!res.ok) {
+          if (!cancelled) setPhotoPreviewDataUrl(null);
+          return;
+        }
+
+        const contentLength = res.headers.get('content-length');
+        if (contentLength && Number(contentLength) > 5_000_000) {
+          if (!cancelled) setPhotoPreviewDataUrl(null);
+          return;
+        }
+
+        const blob = await res.blob();
+        const dataUrl = await blobToDataUrl(blob);
+        if (!dataUrl.startsWith('data:')) {
+          if (!cancelled) setPhotoPreviewDataUrl(null);
+          return;
+        }
+
+        if (!cancelled) setPhotoPreviewDataUrl(dataUrl);
+      } catch {
+        if (!cancelled) setPhotoPreviewDataUrl(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resumeData.personalInfo.photoFileId]);
 
   useEffect(() => {
     if (isEditing && resumeId && hasLoadedResume && !hasResetForm) {
@@ -429,7 +487,7 @@ export default function ResumeBuilderForm() {
                 {resumeData.personalInfo.photoFileId ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={getProfilePicturePreviewUrl(resumeData.personalInfo.photoFileId, 160)}
+                    src={photoPreviewDataUrl ?? getProfilePicturePreviewUrl(resumeData.personalInfo.photoFileId, 160)}
                     alt="Profile photo preview"
                     className="h-full w-full object-cover"
                   />
