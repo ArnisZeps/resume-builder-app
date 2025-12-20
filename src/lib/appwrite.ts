@@ -12,7 +12,7 @@ export const storage = new Storage(client);
 
 export { client, ID, Query };
 
-const PROFILE_PICTURES_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_PROFILE_PICTURES_BUCKET_ID || process.env.NEXT_PUBLIC_APPWRITE_PROFILE_BUCKET_ID || '';
+const PROFILE_PICTURES_BUCKET_ID = process.env.NEXT_PUBLIC_APPWRITE_PROFILE_PICTURES_BUCKET_ID || '';
 
 export function getProfilePicturePreviewUrl(fileId: string, size = 160) {
     const endpoint = (process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1').replace(/\/$/, '');
