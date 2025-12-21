@@ -40,7 +40,7 @@ export function ElegantTemplate({ resumeData, styleSettings }: { resumeData: Res
             <img
               src={photoUrl}
               alt="Profile photo"
-              style={{ width: '76px', height: '76px', borderRadius: '8px', objectFit: 'cover', border: `${line.hairline}px solid ${colors.divider}` }}
+              style={{ width: '76px', height: '76px', borderRadius: '8px', objectFit: 'cover' }}
             />
           </div>
         )}

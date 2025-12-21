@@ -22,8 +22,6 @@ export default function ResumeBuilderPage() {
 function ResumeBuilderInner() {
   const { resumeData } = useResumeContext();
   const [showPreview, setShowPreview] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [pagesForExport, setPagesForExport] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -46,7 +44,7 @@ function ResumeBuilderInner() {
           'X-Appwrite-JWT': jwt.jwt,
         },
         body: JSON.stringify({
-          pages: pagesForExport,
+          html: pagesForExport[0] || '',
           title,
         }),
       });
@@ -105,42 +103,11 @@ function ResumeBuilderInner() {
         <div className="w-1/2 fixed right-0 top-[72px] h-[calc(100vh-72px)] overflow-hidden">
           <div className=" h-full relative">
             <ResumePreview
-              currentPage={currentPage}
-              onCurrentPageChange={setCurrentPage}
-              onTotalPagesChange={setTotalPages}
               onPagesChange={setPagesForExport}
             />
 
             <div className="fixed bottom-6 right-0 w-1/2 flex justify-center z-50 pointer-events-none">
               <div className="pointer-events-auto flex items-center gap-3 px-6 py-3 bg-white/90 backdrop-blur-md border border-black/10 rounded-full shadow-2xl">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    currentPage <= 1
-                      ? 'text-slate-400 cursor-not-allowed'
-                      : 'text-slate-900 hover:bg-black/5'
-                  }`}
-                >
-                  ← Previous
-                </button>
-
-                <span className="text-slate-900 font-medium px-3">
-                  Page {currentPage} of {totalPages}
-                </span>
-
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    currentPage >= totalPages
-                      ? 'text-slate-400 cursor-not-allowed'
-                      : 'text-slate-900 hover:bg-black/5'
-                  }`}
-                >
-                  Next →
-                </button>
-
                 <button
                   onClick={downloadPdf}
                   disabled={downloadDisabled}
@@ -167,42 +134,11 @@ function ResumeBuilderInner() {
           <div className="fixed inset-0 top-[72px] bg-gradient-to-br from-violet-800 via-purple-900 to-indigo-900 z-40 overflow-hidden overscroll-none">
             <div className="p-4 h-full relative">
               <ResumePreview
-                currentPage={currentPage}
-                onCurrentPageChange={setCurrentPage}
-                onTotalPagesChange={setTotalPages}
                 onPagesChange={setPagesForExport}
               />
 
               <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
                 <div className="pointer-events-auto flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-md border border-black/10 rounded-full shadow-2xl text-sm sm:gap-3 sm:px-6 sm:py-3 sm:text-base">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage <= 1}
-                    className={`px-3 py-1.5 rounded-lg font-medium transition-all sm:px-4 sm:py-2 ${
-                      currentPage <= 1
-                        ? 'text-slate-400 cursor-not-allowed'
-                        : 'text-slate-900 hover:bg-black/5'
-                    }`}
-                  >
-                    ← Previous
-                  </button>
-
-                  <span className="text-slate-900 font-medium px-2 sm:px-3">
-                    Page {currentPage} of {totalPages}
-                  </span>
-
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage >= totalPages}
-                    className={`px-3 py-1.5 rounded-lg font-medium transition-all sm:px-4 sm:py-2 ${
-                      currentPage >= totalPages
-                        ? 'text-slate-400 cursor-not-allowed'
-                        : 'text-slate-900 hover:bg-black/5'
-                    }`}
-                  >
-                    Next →
-                  </button>
-
                   <button
                     onClick={downloadPdf}
                     disabled={downloadDisabled}

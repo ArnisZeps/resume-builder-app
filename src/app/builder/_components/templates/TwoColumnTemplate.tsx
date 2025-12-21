@@ -49,7 +49,7 @@ export function TwoColumnTemplate({ resumeData }: { resumeData: ResumeData }) {
           {hasSummary && (
             <div>
               <h2 style={sectionTitle}>Profile</h2>
-              <div style={{ border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+              <div style={{ padding: '10px 10px', backgroundColor: COLORS.subtleBg }}>
                 <p style={{ ...BASE.bodyText, fontSize: '11px' }}>{personalInfo.professionalSummary}</p>
               </div>
             </div>
@@ -58,7 +58,7 @@ export function TwoColumnTemplate({ resumeData }: { resumeData: ResumeData }) {
           {hasSkills && (
             <div>
               <h2 style={sectionTitle}>Strengths</h2>
-              <div style={{ border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+              <div style={{ padding: '10px 10px', backgroundColor: COLORS.subtleBg }}>
                 {resumeData.skills
                   ?.filter((g) => g.category || g.items?.some((i) => i.trim()))
                   .map((g, index) => (
@@ -109,7 +109,7 @@ export function TwoColumnTemplate({ resumeData }: { resumeData: ResumeData }) {
           {resumeData.projects
             ?.filter((p) => p.title || p.description)
             .map((p, index) => (
-              <div key={index} style={{ marginBottom: '12px', border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+              <div key={index} style={{ marginBottom: '12px', padding: '10px 10px', backgroundColor: COLORS.subtleBg }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' }}>
                   <h3 style={BASE.itemTitle}>{p.title}</h3>
                   <span style={{ fontSize: '10px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>{formatDateRange(p.startDate, p.endDate, false)}</span>

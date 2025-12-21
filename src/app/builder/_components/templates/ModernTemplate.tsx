@@ -23,7 +23,7 @@ export function ModernTemplate({ resumeData, styleSettings }: { resumeData: Resu
             <img
               src={photoUrl}
               alt="Profile photo"
-              style={{ width: '68px', height: '68px', borderRadius: '8px', objectFit: 'cover', border: `${line.hairline}px solid ${colors.divider}` }}
+              style={{ width: '68px', height: '68px', borderRadius: '8px', objectFit: 'cover' }}
             />
           )}
 

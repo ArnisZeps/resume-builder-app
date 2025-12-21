@@ -6,6 +6,7 @@ export const runtime = 'nodejs';
 
 type PdfRequestBody = {
   pages: string[];
+  html?: string;
   title?: string;
   // Optional fallback if the client can't send headers.
   appwriteJwt?: string;
@@ -149,6 +150,8 @@ function buildHtml(pages: string[], title: string) {
         background: white;
         position: relative;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
 
       @page {
@@ -175,6 +178,46 @@ function buildHtml(pages: string[], title: string) {
 `;
 }
 
+function buildContinuousHtml(html: string, title: string) {
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>${title}</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      @page {
+        size: A4;
+        margin: ${PADDING}px;
+      }
+
+      /* Avoid splitting single bullet lines across pages. */
+      li {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    </style>
+  </head>
+  <body>
+    ${html}
+  </body>
+</html>
+`;
+}
+
 export async function POST(req: NextRequest) {
   let body: PdfRequestBody;
   try {
@@ -187,9 +230,14 @@ export async function POST(req: NextRequest) {
   const appwriteJwtBody = typeof body?.appwriteJwt === 'string' ? body.appwriteJwt.trim() : '';
   const appwriteJwt = appwriteJwtHeader || appwriteJwtBody;
 
+  const continuousHtml = typeof body?.html === 'string' ? body.html : '';
+  const hasContinuousHtml = continuousHtml.trim().length > 0;
+
   const pages = body?.pages;
-  if (!Array.isArray(pages) || pages.length === 0 || pages.some((p) => typeof p !== 'string')) {
-    return NextResponse.json({ error: '`pages` must be a non-empty string[]' }, { status: 400 });
+  const hasPages = Array.isArray(pages) && pages.length > 0 && !pages.some((p) => typeof p !== 'string');
+
+  if (!hasContinuousHtml && !hasPages) {
+    return NextResponse.json({ error: 'Provide either non-empty `html` or non-empty `pages`' }, { status: 400 });
   }
 
   const title = typeof body.title === 'string' && body.title.trim().length > 0 ? body.title.trim() : 'Resume';
@@ -210,7 +258,7 @@ export async function POST(req: NextRequest) {
 
       await page.setViewport({ width: A4_WIDTH, height: A4_HEIGHT });
 
-      let html = buildHtml(pages, title);
+      let html = hasContinuousHtml ? buildContinuousHtml(continuousHtml, title) : buildHtml(pages, title);
       html = await inlineAppwriteImages(html, appwriteJwt);
       await page.setContent(html);
 
@@ -232,12 +280,6 @@ export async function POST(req: NextRequest) {
         format: 'A4',
         printBackground: true,
         preferCSSPageSize: true,
-        margin: {
-          top: '0',
-          right: '0',
-          bottom: '0',
-          left: '0',
-        },
       });
 
       const filename = safeFilename(title) || 'Resume';

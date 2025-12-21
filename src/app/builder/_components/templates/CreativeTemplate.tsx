@@ -82,7 +82,7 @@ export function CreativeTemplate({ resumeData }: { resumeData: ResumeData }) {
       {hasSummary && (
         <div style={{ marginBottom: '14px' }}>
           <h2 style={sectionTitle}>Summary</h2>
-          <div style={{ backgroundColor: COLORS.subtleBg, border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+          <div style={{ backgroundColor: COLORS.subtleBg, padding: '10px 10px' }}>
             <p style={{ ...BASE.bodyText, fontSize: '12px' }}>{personalInfo.professionalSummary}</p>
           </div>
         </div>

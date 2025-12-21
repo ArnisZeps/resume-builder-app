@@ -27,7 +27,7 @@ export function CompactTemplate({ resumeData }: { resumeData: ResumeData }) {
 
   return (
     <>
-      <div style={{ backgroundColor: COLORS.subtleBg, border: `1px solid ${COLORS.divider}`, padding: '12px 14px', marginBottom: '12px' }}>
+      <div style={{ backgroundColor: COLORS.subtleBg, padding: '12px 14px', marginBottom: '12px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', alignItems: 'baseline' }}>
           <h1 style={{ ...BASE.headerName, fontSize: '26px', fontWeight: 850, margin: 0 }}>
             {personalInfo.firstName} {personalInfo.lastName}

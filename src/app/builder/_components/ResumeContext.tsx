@@ -54,7 +54,22 @@ export interface ResumeData extends Record<string, unknown>{
   }>;
 }
 
-export const TEMPLATE_KEYS = ['classic', 'modern', 'elegant', 'bold'] as const;
+export const TEMPLATE_KEYS = [
+  'classic',
+  'modern',
+  'elegant',
+  'bold',
+  'precision',
+  'bannerWave',
+  'editorial',
+  'timeline',
+  'cards',
+  'splitHeader',
+  'outline',
+  'gridPattern',
+  'badges',
+  'minimalLineArt',
+] as const;
 export type TemplateType = (typeof TEMPLATE_KEYS)[number];
 
 export function isTemplateType(value: unknown): value is TemplateType {

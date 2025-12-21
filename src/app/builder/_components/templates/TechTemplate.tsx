@@ -21,7 +21,7 @@ export function TechTemplate({ resumeData }: { resumeData: ResumeData }) {
 
   return (
     <>
-      <div style={{ border: `1px solid ${COLORS.divider}`, padding: '14px 14px', marginBottom: '14px' }}>
+      <div style={{ padding: '14px 14px', marginBottom: '14px', backgroundColor: COLORS.subtleBg }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'baseline' }}>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ ...BASE.headerName, fontSize: '30px', fontWeight: 850, margin: 0 }}>
@@ -53,7 +53,7 @@ export function TechTemplate({ resumeData }: { resumeData: ResumeData }) {
       {hasSkills && (
         <div style={{ marginBottom: '14px' }}>
           <h2 style={sectionTitle}>Tech Stack</h2>
-          <div style={{ backgroundColor: COLORS.subtleBg, border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+          <div style={{ backgroundColor: COLORS.subtleBg, padding: '10px 10px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {resumeData.skills
                 .filter((g) => g.category || g.items?.some((i) => i.trim()))
@@ -74,7 +74,7 @@ export function TechTemplate({ resumeData }: { resumeData: ResumeData }) {
           {resumeData.projects
             .filter((p) => p.title || p.description)
             .map((p, index) => (
-              <div key={index} style={{ marginBottom: '12px', border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+              <div key={index} style={{ marginBottom: '12px', padding: '10px 10px', backgroundColor: COLORS.subtleBg }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px', alignItems: 'baseline' }}>
                   <h3 style={BASE.itemTitle}>{p.title}</h3>
                   <span style={{ fontSize: '10px', color: COLORS.textMuted, whiteSpace: 'nowrap' }}>{formatDateRange(p.startDate, p.endDate, false)}</span>

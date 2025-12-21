@@ -59,7 +59,7 @@ export function BoldTemplate({ resumeData, styleSettings }: { resumeData: Resume
             <img
               src={photoUrl}
               alt="Profile photo"
-              style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.6)' }}
+              style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover' }}
             />
           )}
 

@@ -71,7 +71,7 @@ export function ExecutiveTemplate({ resumeData }: { resumeData: ResumeData }) {
             {resumeData.skills
               .filter((g) => g.category || g.items?.some((i) => i.trim()))
               .map((g, index) => (
-                <div key={index} style={{ border: `1px solid ${COLORS.divider}`, padding: '10px 10px' }}>
+                <div key={index} style={{ padding: '10px 10px', backgroundColor: COLORS.subtleBg }}>
                   {g.category && <div style={{ fontSize: '11px', fontWeight: 800, color: COLORS.textPrimary, marginBottom: '4px' }}>{g.category}</div>}
                   <div style={{ ...BASE.bodyText, fontSize: '11px' }}>{g.items?.filter((i) => i.trim()).join(', ')}</div>
                 </div>

@@ -16,7 +16,7 @@ export function ClassicTemplate({ resumeData, styleSettings }: { resumeData: Res
             <img
               src={photoUrl}
               alt="Profile photo"
-              style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: `${line.hairline}px solid ${colors.divider}` }}
+              style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover' }}
             />
           )}
 
