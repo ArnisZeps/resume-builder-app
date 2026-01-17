@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { TemplateType, useResumeContext } from "./ResumeContext";
-import { templateNames, templates } from "./templates";
+import { normalizeSectionOrder, type SectionKey, TemplateType, useResumeContext } from "./ResumeContext";
+import { SECTION_LABELS, templateMeta, templateNames, templates } from "./templates";
 import { DEFAULT_STYLE_SETTINGS, RECOMMENDED_ACCENT_COLORS } from "./templates/templateKit";
 import WorkExperienceSection from "./sections/WorkExperienceSection";
 import EducationSection from "./sections/EducationSection";
@@ -94,7 +94,7 @@ function TemplateThumbnail({ templateKey }: { templateKey: TemplateType }) {
 }
 
 export default function ResumeBuilderForm() {
-  const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate, styleSettings, updateStyleSettings, setStyleSettings } = useResumeContext();
+  const { resumeData, updatePersonalInfo, setSelectedTemplate, selectedTemplate, styleSettings, updateStyleSettings, setStyleSettings, setSectionOrder } = useResumeContext();
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const { saveResume, updateResume, uploadProfilePicture, deleteProfilePicture, isLoading } = useResumeApi();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -260,6 +260,111 @@ export default function ResumeBuilderForm() {
     return 'bg-yellow-400 hover:bg-yellow-300';
   };
 
+  const sidebarSections = useMemo(() => templateMeta[selectedTemplate]?.sidebarSections ?? [], [selectedTemplate]);
+  const sidebarSet = useMemo(() => new Set<SectionKey>(sidebarSections), [sidebarSections]);
+  const sectionOrder = useMemo(() => normalizeSectionOrder(resumeData.sectionOrder), [resumeData.sectionOrder]);
+  const mainOrder = useMemo(() => sectionOrder.filter((k) => !sidebarSet.has(k)), [sectionOrder, sidebarSet]);
+  const sidebarOrder = useMemo(() => sectionOrder.filter((k) => sidebarSet.has(k)), [sectionOrder, sidebarSet]);
+
+  const [draggingKey, setDraggingKey] = useState<SectionKey | null>(null);
+  const [dragOverKey, setDragOverKey] = useState<SectionKey | null>(null);
+
+  const reorderWithin = useCallback((items: SectionKey[], from: SectionKey, to: SectionKey) => {
+    const fromIndex = items.indexOf(from);
+    const toIndex = items.indexOf(to);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return items;
+    const next = [...items];
+    next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, from);
+    return next;
+  }, []);
+
+  const mergeRegionIntoGlobal = useCallback(
+    (scope: 'all' | 'main' | 'sidebar', nextRegionOrder: SectionKey[]) => {
+      if (scope === 'all') {
+        setSectionOrder(nextRegionOrder);
+        return;
+      }
+
+      const next = (() => {
+        let i = 0;
+        return sectionOrder.map((key) => {
+          const inRegion = scope === 'sidebar' ? sidebarSet.has(key) : !sidebarSet.has(key);
+          if (!inRegion) return key;
+          const replacement = nextRegionOrder[i];
+          i += 1;
+          return replacement ?? key;
+        });
+      })();
+
+      setSectionOrder(next);
+    },
+    [sectionOrder, setSectionOrder, sidebarSet],
+  );
+
+  const SectionOrderList = ({
+    title,
+    items,
+    scope,
+  }: {
+    title: string;
+    items: SectionKey[];
+    scope: 'all' | 'main' | 'sidebar';
+  }) => {
+    const onDropOn = (target: SectionKey, e: React.DragEvent) => {
+      e.preventDefault();
+      const raw = e.dataTransfer.getData('text/plain');
+      const from = raw as SectionKey;
+      if (!from || !items.includes(from) || from === target) return;
+      const nextItems = reorderWithin(items, from, target);
+      mergeRegionIntoGlobal(scope, nextItems);
+    };
+
+    return (
+      <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        <div className="text-xs font-semibold text-white/80 uppercase tracking-wide">{title}</div>
+        <div className="mt-3 space-y-2">
+          {items.map((key) => (
+            <div
+              key={key}
+              draggable
+              onDragStart={(e) => {
+                e.dataTransfer.setData('text/plain', key);
+                e.dataTransfer.effectAllowed = 'move';
+                setDraggingKey(key);
+              }}
+              onDragEnd={() => {
+                setDraggingKey(null);
+                setDragOverKey(null);
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverKey !== key) setDragOverKey(key);
+              }}
+              onDragLeave={() => {
+                if (dragOverKey === key) setDragOverKey(null);
+              }}
+              onDrop={(e) => {
+                onDropOn(key, e);
+                setDragOverKey(null);
+              }}
+              className={
+                "flex items-center justify-between gap-3 rounded-md border bg-white/5 px-3 py-2 select-none " +
+                (dragOverKey === key && draggingKey && draggingKey !== key
+                  ? "border-yellow-400/60"
+                  : "border-white/10")
+              }
+            >
+              <div className="text-sm text-white truncate">{SECTION_LABELS[key] ?? key}</div>
+              <div className="text-xs text-white/50">Drag</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 relative">
       {isLoadingResume && (
@@ -274,7 +379,7 @@ export default function ResumeBuilderForm() {
       {loadError && (
         <div className="mb-6 bg-red-500/20 border border-red-500/50 rounded-lg p-4">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
@@ -287,7 +392,7 @@ export default function ResumeBuilderForm() {
         </div>
       )}
 
-      <div className="flex border-b border-white/20 flex-shrink-0 gap-9">
+      <div className="flex border-b border-white/20 shrink-0 gap-9">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Resume Builder</h1>
           <p className="text-white/80 text-sm">Fill out your information to build your resume</p>
@@ -409,6 +514,17 @@ export default function ResumeBuilderForm() {
                 />
               </div>
             </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {sidebarSections.length > 0 ? (
+              <>
+                <SectionOrderList title="Main section order" items={mainOrder} scope="main" />
+                <SectionOrderList title="Sidebar section order" items={sidebarOrder} scope="sidebar" />
+              </>
+            ) : (
+              <SectionOrderList title="Section order" items={mainOrder} scope="all" />
+            )}
           </div>
         </div>
 

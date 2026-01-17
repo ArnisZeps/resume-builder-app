@@ -46,8 +46,26 @@ export const RECOMMENDED_ACCENT_COLORS = [
   COLORS.textPrimary, // near-black
 ] as const;
 
+export type TemplateTheme = ReturnType<typeof getTemplateTheme>;
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+export function joinParts(parts: Array<string | undefined | null | false>, separator: string) {
+  return parts
+    .map((p) => (typeof p === 'string' ? p.trim() : ''))
+    .filter((p) => p.length > 0)
+    .join(separator);
+}
+
+export function getInitials(firstName?: string, lastName?: string) {
+  const a = (firstName || '').trim();
+  const b = (lastName || '').trim();
+  const first = a ? a[0] : '';
+  const second = b ? b[0] : '';
+  const out = `${first}${second}`.toUpperCase();
+  return out || '·';
 }
 
 export function normalizeStyleSettings(input: unknown): ResumeStyleSettings {
@@ -139,6 +157,34 @@ function hexToRgba(hex: string, alpha: number) {
 
   const a = Math.min(1, Math.max(0, alpha));
   return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+export function getContrastTextColor(hex: string) {
+  const trimmed = hex.trim();
+  const short = /^#([0-9a-fA-F]{3})$/.exec(trimmed);
+  const long = /^#([0-9a-fA-F]{6})$/.exec(trimmed);
+  if (!short && !long) return COLORS.textPrimary;
+
+  const to255 = (v: string) => Number.parseInt(v, 16);
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (short) {
+    const [rs, gs, bs] = short[1].split('');
+    r = to255(rs + rs);
+    g = to255(gs + gs);
+    b = to255(bs + bs);
+  } else if (long) {
+    r = to255(long[1].slice(0, 2));
+    g = to255(long[1].slice(2, 4));
+    b = to255(long[1].slice(4, 6));
+  }
+
+  // Relative luminance; simple threshold works fine for accents.
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return lum < 0.55 ? COLORS.white : COLORS.textPrimary;
 }
 
 function scaleLineHeight(value: CSSProperties['lineHeight'], scale: number) {
@@ -250,5 +296,11 @@ export function getTemplateTheme(settings?: Partial<ResumeStyleSettings>) {
     accentSoftBg: hexToRgba(accent, 0.08) ?? COLORS.subtleBg,
   } as const;
 
-  return { settings: merged, colors, base, line };
+  // Future-facing: keep fonts customizable without implementing UI yet.
+  const vars = {
+    '--font-body': "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    '--font-heading': "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  } as unknown as CSSProperties;
+
+  return { settings: merged, colors, base, line, vars };
 }

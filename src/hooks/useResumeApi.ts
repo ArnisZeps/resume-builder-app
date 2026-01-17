@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { ResumeData } from '../app/builder/_components/ResumeContext';
 import type { ResumeStyleSettings } from '../app/builder/_components/templates/templateKit';
 import { normalizeStyleSettings } from '../app/builder/_components/templates/templateKit';
+import { migrateTemplateKey } from '../app/builder/_components/templates';
 import { appwriteAuth, appwriteDatabase, appwriteStorage, Query } from '@/lib/appwrite';
 
 interface SaveResumeResponse {
@@ -74,9 +75,10 @@ export function useResumeApi(): UseResumeApiReturn {
         userId: resumeData.userId || 'temp_user',
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
         resumeData: JSON.stringify({
-          template: resumeData.template,
+          template: migrateTemplateKey(resumeData.template),
           styleSettings: resumeData.styleSettings,
           personalInfo: resumeData.personalInfo,
+          sectionOrder: resumeData.sectionOrder,
           experience: resumeData.experience || [],
           education: resumeData.education || [],
           skills: resumeData.skills || [],
@@ -118,9 +120,10 @@ export function useResumeApi(): UseResumeApiReturn {
       const updateDocument = {
         title: `${resumeData.personalInfo.firstName} ${resumeData.personalInfo.lastName} Resume`,
         resumeData: JSON.stringify({
-          template: resumeData.template,
+          template: migrateTemplateKey(resumeData.template),
           styleSettings: resumeData.styleSettings,
           personalInfo: resumeData.personalInfo,
+          sectionOrder: resumeData.sectionOrder,
           experience: resumeData.experience || [],
           education: resumeData.education || [],
           skills: resumeData.skills || [],
@@ -173,7 +176,7 @@ export function useResumeApi(): UseResumeApiReturn {
       const parsedResumeData = doc.resumeData ? JSON.parse(doc.resumeData) : {};
       const resumeData: ResumeData & { template: string; styleSettings?: ResumeStyleSettings; id: string } = {
         id: doc.$id,
-        template: parsedResumeData.template || 'classic',
+        template: migrateTemplateKey(parsedResumeData.template),
         styleSettings: parsedResumeData.styleSettings ? normalizeStyleSettings(parsedResumeData.styleSettings) : undefined,
         personalInfo: parsedResumeData.personalInfo || {
           firstName: '',
@@ -185,7 +188,7 @@ export function useResumeApi(): UseResumeApiReturn {
           linkedin: '',
           github: '',
         },
-        professionalSummary: parsedResumeData.professionalSummary || '',
+        sectionOrder: Array.isArray(parsedResumeData.sectionOrder) ? parsedResumeData.sectionOrder : undefined,
         experience: parsedResumeData.experience || [],
         education: parsedResumeData.education || [],
         skills: parsedResumeData.skills || [],
@@ -240,7 +243,7 @@ export function useResumeApi(): UseResumeApiReturn {
         try {
           if (doc.resumeData) {
             const parsedData = JSON.parse(doc.resumeData);
-            template = parsedData.template || 'classic';
+            template = migrateTemplateKey(parsedData.template);
           }
         } catch (e) {
           console.warn('Failed to parse resumeData for template:', e);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 
@@ -84,7 +84,7 @@ async function inlineAppwriteImages(html: string, appwriteJwt?: string) {
         const arrayBuffer = await res.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
         srcToDataUrl.set(src, `data:${contentType};base64,${base64}`);
-      } catch (e) {
+      } catch {
         // Ignore image inlining failures; the PDF can still be generated.
       }
     })
@@ -92,7 +92,7 @@ async function inlineAppwriteImages(html: string, appwriteJwt?: string) {
 
   if (srcToDataUrl.size === 0) return html;
 
-  return html.replace(imgSrcRegex, (full, quote, src) => {
+  return html.replace(imgSrcRegex, (full, _quote, src) => {
     const next = srcToDataUrl.get(src);
     if (!next) return full;
     return full.replace(src, next);
@@ -310,3 +310,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

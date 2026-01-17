@@ -2,7 +2,7 @@
 
 import { useResumeContext } from './ResumeContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { templates } from './templates';
+import { DEFAULT_TEMPLATE_KEY, templates } from './templates';
 import { account } from '@/lib/appwrite';
 
 interface ResumePreviewProps {
@@ -23,7 +23,6 @@ export default function ResumePreview({ onPagesChange }: ResumePreviewProps = {}
   const A4_WIDTH = 794;
   const A4_HEIGHT = 1123;
   const PADDING = 60;
-  const CONTENT_HEIGHT = A4_HEIGHT - (PADDING * 2);
 
   useEffect(() => {
     const updateScale = () => {
@@ -162,7 +161,7 @@ export default function ResumePreview({ onPagesChange }: ResumePreviewProps = {}
     return () => ro.disconnect();
   }, [scale, html]);
 
-  const SelectedTemplate = templates[selectedTemplate] ?? templates.classic;
+  const SelectedTemplate = templates[selectedTemplate] ?? templates[DEFAULT_TEMPLATE_KEY];
 
   return (
     <div className="w-full h-full flex flex-col relative">
